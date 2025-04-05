@@ -333,10 +333,10 @@ public class DSRemotingClient extends RemotingClient {
     private static final void dump(IoBuffer data) {
         log.debug("Hex: {}", data.getHexDump());
         int pos = data.position();
-        byte[] bar = new byte[data.limit() - data.position()];
-        data.get(bar);
-        log.debug("Str {}", new String(bar));
-        bar = null;
+        byte[] buffer = new byte[data.limit() - data.position()];
+        data.get(buffer);
+        log.debug("Str {}", new String(buffer));
+        buffer = null;
         data.position(pos);
     }
 
