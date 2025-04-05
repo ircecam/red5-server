@@ -32,16 +32,36 @@ public class BaseInput {
     protected AtomicInteger refId = new AtomicInteger(0);
 
     /**
-     * Store an object into a map.
+     * Generate a new unique reference ID.
+     *
+     * @return reference id
+     */
+    private int generateRefId() {
+        return refId.getAndIncrement();
+    }
+
+    /**
+     * Store an object into a map using the given reference ID.
+     *
+     * @param refId
+     *            Reference ID
+     * @param obj
+     *            Object to store
+     */
+    private void storeInMap(int refId, Object obj) {
+        refMap.put(Integer.valueOf(refId), obj);
+    }
+
+    /**
+     * Combine object storage and reference ID generation.
      *
      * @param obj
      *            Object to store
-     * @return reference id
+     * @return reference ID
      */
     protected int storeReference(Object obj) {
-        int newRefId = refId.getAndIncrement();
-        //log.trace("storeReference - ref id: {} obj: {}", newRefId, obj);
-        refMap.put(Integer.valueOf(newRefId), obj);
+        int newRefId = generateRefId();
+        storeInMap(newRefId, obj);
         return newRefId;
     }
 
