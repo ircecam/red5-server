@@ -319,198 +319,182 @@ public final class PlayEngine implements IFilter, IPushableConsumer, IPipeConnec
         play(item, true);
     }
 
+    // Java
     /**
      * Play stream
      *
-     * See: https://www.adobe.com/devnet/adobe-media-server/articles/dynstream_actionscript.html
-     *
-     * @param item
-     *            Playlist item
-     * @param withReset
-     *            Send reset status before playing.
-     * @throws StreamNotFoundException
-     *             Stream not found
-     * @throws IllegalStateException
-     *             Stream is in stopped state
-     * @throws IOException
-     *             Stream had IO exception
+     * @param item Playlist item
+     * @param withReset Send reset status before playing.
+     * @throws StreamNotFoundException Stream not found
+     * @throws IllegalStateException Stream is in stopped state
+     * @throws IOException Stream had IO exception
      */
     public void play(IPlayItem item, boolean withReset) throws StreamNotFoundException, IllegalStateException, IOException {
-        IMessageInput in = null;
-        // cannot play if state is not stopped
-        switch (subscriberStream.getState()) {
-            case STOPPED:
-                in = msgInReference.get();
-                if (in != null) {
-                    in.unsubscribe(this);
-                    msgInReference.set(null);
-                }
-                break;
-            default:
-                throw new IllegalStateException("Cannot play from non-stopped state");
+        ensureStoppedState();
+        int type = determinePlayType(item);
+        IProviderService.INPUT_TYPE sourceType = lookupSourceType(item, type);
+        processPlayDecision(item, type, sourceType, withReset);
+    }
+
+    /**
+     * Ensures that the current state of the subscriber stream is stopped before
+     * proceeding.
+     */
+    private void ensureStoppedState() throws IllegalStateException {
+        if (subscriberStream.getState() != StreamState.STOPPED) {
+            throw new IllegalStateException("Cannot play from non-stopped state");
         }
-        // Play type determination
-        // https://help.adobe.com/en_US/FlashPlatform/reference/actionscript/3/flash/net/NetStream.html#play()
-        // The start time, in seconds. Allowed values are -2, -1, 0, or a positive number.
-        // The default value is -2, which looks for a live stream, then a recorded stream,
-        // and if it finds neither, opens a live stream.
-        // If -1, plays only a live stream.
-        // If 0 or a positive number, plays a recorded stream, beginning start seconds in.
-        //
-        // -2: live then recorded, -1: live, >=0: recorded
+        IMessageInput in = msgInReference.get();
+        if (in != null) {
+            in.unsubscribe(this);
+            msgInReference.set(null);
+        }
+    }
+
+    /**
+     * Determines the play type based on the start time of the given play item.
+     *
+     * @param item the play item from which the type is to be determined
+     * @return the calculated play type as an integer
+     */
+    private int determinePlayType(IPlayItem item) {
         int type = (int) (item.getStart() / 1000);
         log.debug("Type {}", type);
-        // see if it's a published stream
-        IScope thisScope = subscriberStream.getScope();
-        final String itemName = item.getName();
-        //check for input and type
-        IProviderService.INPUT_TYPE sourceType = providerService.lookupProviderInput(thisScope, itemName, type);
-        boolean sendNotifications = true;
-        // decision: 0 for Live, 1 for File, 2 for Wait, 3 for N/A
-        switch (type) {
-            case -2:
-                if (sourceType == IProviderService.INPUT_TYPE.LIVE) {
-                    playDecision = 0;
-                } else if (sourceType == IProviderService.INPUT_TYPE.VOD) {
-                    playDecision = 1;
-                } else if (sourceType == IProviderService.INPUT_TYPE.LIVE_WAIT) {
-                    playDecision = 2;
-                }
-                break;
-            case -1:
-                if (sourceType == IProviderService.INPUT_TYPE.LIVE) {
-                    playDecision = 0;
-                } else if (sourceType == IProviderService.INPUT_TYPE.LIVE_WAIT) {
-                    playDecision = 2;
-                }
-                break;
-            default:
-                if (sourceType == IProviderService.INPUT_TYPE.VOD) {
-                    playDecision = 1;
-                }
-                break;
-        }
-        IMessage msg = null;
-        currentItem.set(item);
-        long itemLength = item.getLength();
-        if (isDebug) {
-            log.debug("Play decision is {} (0=Live, 1=File, 2=Wait, 3=N/A) item length: {}", playDecision, itemLength);
-        }
-        switch (playDecision) {
+        return type;
+    }
+
+    /**
+     * Retrieves the source type for the given stream.
+     *
+     * @param item the playback item containing the stream details
+     * @param type the type of input for which the source type is being looked up
+     * @return the input type*/
+    private IProviderService.INPUT_TYPE lookupSourceType(IPlayItem item, int type) {
+        IScope scope = subscriberStream.getScope();
+        return providerService.lookupProviderInput(scope, item.getName(), type);
+    }
+
+    /**
+     * Processes the play decision based on the provided item, type, source type, and reset condition.
+     *
+     * @param item       The play item to be processed.
+     * @param type       The type of decision to*/
+    private void processPlayDecision(IPlayItem item, int type, IProviderService.INPUT_TYPE sourceType, boolean withReset) throws StreamNotFoundException, IOException {
+        switch (determineDecision(type, sourceType)) {
             case 0:
-                // get source input without create
-                in = providerService.getLiveProviderInput(thisScope, itemName, false);
-                if (msgInReference.compareAndSet(null, in)) {
-                    // drop all frames up to the next keyframe
-                    videoFrameDropper.reset(IFrameDropper.SEND_KEYFRAMES_CHECK);
-                    if (in instanceof IBroadcastScope) {
-                        IBroadcastStream stream = (IBroadcastStream) ((IBroadcastScope) in).getClientBroadcastStream();
-                        if (stream != null && stream.getCodecInfo() != null) {
-                            IVideoStreamCodec videoCodec = stream.getCodecInfo().getVideoCodec();
-                            if (videoCodec != null) {
-                                if (withReset) {
-                                    sendReset();
-                                    sendResetStatus(item);
-                                    sendStartStatus(item);
-                                }
-                                sendNotifications = false;
-                                if (videoCodec.getNumInterframes() > 0 || videoCodec.getKeyframe() != null) {
-                                    bufferedInterframeIdx = 0;
-                                    videoFrameDropper.reset(IFrameDropper.SEND_ALL);
-                                }
-                            }
-                        }
-                    }
-                    // subscribe to stream (ClientBroadcastStream.onPipeConnectionEvent)
-                    in.subscribe(this, null);
-                    // execute the processes to get Live playback setup
-                    playLive();
-                } else {
-                    sendStreamNotFoundStatus(item);
-                    throw new StreamNotFoundException(itemName);
-                }
-                break;
-            case 2:
-                // get source input with create
-                in = providerService.getLiveProviderInput(thisScope, itemName, true);
-                if (msgInReference.compareAndSet(null, in)) {
-                    if (type == -1 && itemLength >= 0) {
-                        if (isDebug) {
-                            log.debug("Creating wait job for {}", itemLength);
-                        }
-                        // Wait given timeout for stream to be published
-                        waitLiveJob = schedulingService.addScheduledOnceJob(itemLength, new IScheduledJob() {
-                            public void execute(ISchedulingService service) {
-                                connectToProvider(itemName);
-                                waitLiveJob = null;
-                                subscriberStream.onChange(StreamState.END);
-                            }
-                        });
-                    } else if (type == -2) {
-                        if (isDebug) {
-                            log.debug("Creating wait job");
-                        }
-                        // Wait x seconds for the stream to be published
-                        waitLiveJob = schedulingService.addScheduledOnceJob(15000, new IScheduledJob() {
-                            public void execute(ISchedulingService service) {
-                                connectToProvider(itemName);
-                                waitLiveJob = null;
-                            }
-                        });
-                    } else {
-                        connectToProvider(itemName);
-                    }
-                } else if (isDebug) {
-                    log.debug("Message input already set for {}", itemName);
-                }
+                handleLiveStream(item, withReset);
                 break;
             case 1:
-                in = providerService.getVODProviderInput(thisScope, itemName);
-                if (msgInReference.compareAndSet(null, in)) {
-                    if (in.subscribe(this, null)) {
-                        // execute the processes to get VOD playback setup
-                        msg = playVOD(withReset, itemLength);
-                    } else {
-                        log.warn("Input source subscribe failed");
-                        throw new IOException(String.format("Subscribe to %s failed", itemName));
-                    }
-                } else {
-                    sendStreamNotFoundStatus(item);
-                    throw new StreamNotFoundException(itemName);
-                }
+                handleVODStream(item, withReset);
+                break;
+            case 2:
+                handleWaitStream(item, type);
                 break;
             default:
                 sendStreamNotFoundStatus(item);
-                throw new StreamNotFoundException(itemName);
+                throw new StreamNotFoundException(item.getName());
         }
-        // continue with common play processes (live and vod)
-        if (sendNotifications) {
-            if (withReset) {
-                sendReset();
-                sendResetStatus(item);
-            }
-            sendStartStatus(item);
-            if (!withReset) {
-                sendSwitchStatus();
-            }
-            // if its dynamic playback send the complete status
-            if (item instanceof DynamicPlayItem) {
-                sendTransitionStatus();
-            }
+    }
+
+    /**
+     * Determines the decision based on the play type and source type.
+     *
+     * @param type The play type input, which can take specific integer values.
+     * @param sourceType The source type of the input,*/
+    private int determineDecision(int type, IProviderService.INPUT_TYPE sourceType) {
+        if (type == -2 && sourceType == IProviderService.INPUT_TYPE.LIVE) return 0;
+        if (type == -1 && sourceType == IProviderService.INPUT_TYPE.LIVE_WAIT) return 2;
+        if (sourceType == IProviderService.INPUT_TYPE.VOD) return 1;
+        return 3;
+    }
+
+    /**
+     * Handles live stream playback setup for the given play item.
+     *
+     * @param item       The play item that specifies the live stream to be handled.
+     * @param withReset  Indicates whether the live stream should be reset (true) or*/
+    private void handleLiveStream(IPlayItem item, boolean withReset) throws StreamNotFoundException {
+        IMessageInput in = providerService.getLiveProviderInput(subscriberStream.getScope(), item.getName(), false);
+        if (msgInReference.compareAndSet(null, in)) {
+            setupLivePlayback(in, item, withReset);
+        } else {
+            sendStreamNotFoundStatus(item);
+            throw new StreamNotFoundException(item.getName());
         }
-        if (msg != null) {
-            sendMessage((RTMPMessage) msg);
-        }
-        subscriberStream.onChange(StreamState.PLAYING, item, !pullMode);
+    }
+
+    /**
+     * Configures live playback for the given input and play item with an option to reset the playback state.
+     *
+     * @param in        the message input source
+     * @param item      the play item containing*/
+    private void setupLivePlayback(IMessageInput in, IPlayItem item, boolean withReset) {
+        videoFrameDropper.reset(IFrameDropper.SEND_KEYFRAMES_CHECK);
         if (withReset) {
-            log.debug("Resetting times");
-            long currentTime = System.currentTimeMillis();
-            playbackStart = currentTime - streamOffset;
-            nextCheckBufferUnderrun = currentTime + bufferCheckInterval;
-            if (item.getLength() != 0) {
-                ensurePullAndPushRunning();
-            }
+            sendReset();
+            sendResetStatus(item);
         }
+        in.subscribe(this, null);
+        try {
+            playLive();
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    /**
+     * Handles the video-on-demand (VOD) stream case for the provided play item.
+     *
+     * @param item the play item that contains information about the VOD stream to be handled
+     */
+    private void handleVODStream(IPlayItem item, boolean withReset) throws IOException, StreamNotFoundException {
+        IMessageInput in = providerService.getVODProviderInput(subscriberStream.getScope(), item.getName());
+        if (msgInReference.compareAndSet(null, in) && in.subscribe(this, null)) {
+            sendMessage((RTMPMessage) playVOD(withReset, item.getLength()));
+        } else {
+            sendStreamNotFoundStatus(item);
+            throw new StreamNotFoundException(item.getName());
+        }
+    }
+
+    /**
+     * Handles the wait stream case by scheduling a wait job or connecting to the provider.
+     *
+     * @param item The play item that contains information about the stream.
+     * @param type The type of*/
+    private void handleWaitStream(IPlayItem item, int type) {
+        IScheduledJob waitJob = createWaitJob(item, type);
+        if (waitJob != null) {
+            waitLiveJob = schedulingService.addScheduledOnceJob(determineWaitTime(item, type), waitJob);
+        } else {
+            connectToProvider(item.getName());
+        }
+    }
+
+    /**
+     * Creates a scheduled job that waits for a live stream to start.
+     *
+     * @param item the playback item containing details of the live stream
+     * @param type the type of job being created
+     * @return an instance of IScheduledJob that executes the waiting task
+     */
+    private IScheduledJob createWaitJob(IPlayItem item, int type) {
+        return new IScheduledJob() {
+            public void execute(ISchedulingService service) {
+                connectToProvider(item.getName());
+                waitLiveJob = null;
+            }
+        };
+    }
+
+    /**
+     * Determines the wait time based on the given play item and type.
+     *
+     * @param item the play item containing the length of the media or content
+     * @param type the type identifier influencing the wait time calculation;
+     *             a value*/
+    private long determineWaitTime(IPlayItem item, int type) {
+        return (type == -1 && item.getLength() >= 0) ? item.getLength() : 15000;
     }
 
     /**
