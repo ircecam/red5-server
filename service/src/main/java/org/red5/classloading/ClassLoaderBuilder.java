@@ -319,7 +319,8 @@ public final class ClassLoaderBuilder {
         URL[] urls = list.toArray(new URL[0]);
 
         for (URL top : urls) {
-            if (shouldSkip(top, removalList)) continue;
+            if (shouldSkip(top, removalList))
+                continue;
             String topName = parseUrl(top);
 
             for (URL check : urls) {
@@ -340,9 +341,7 @@ public final class ClassLoaderBuilder {
      */
     private static boolean shouldSkip(URL url, Set<URL> removalList) {
         String name = parseUrl(url);
-        return removalList.contains(url) || name.isEmpty() || name.startsWith("red5") ||
-                name.startsWith("grobo") || name.startsWith("junit") || name.startsWith("ivy") ||
-                name.contains("javadoc") || name.contains("sources") || name.endsWith("-");
+        return removalList.contains(url) || name.isEmpty() || name.startsWith("red5") || name.startsWith("grobo") || name.startsWith("junit") || name.startsWith("ivy") || name.contains("javadoc") || name.contains("sources") || name.endsWith("-");
     }
 
     /**
@@ -355,7 +354,8 @@ public final class ClassLoaderBuilder {
      * @return True if the element can be removed, false otherwise.
      */
     private static boolean isRemovable(URL top, URL check, String topName, Set<URL> removalList) {
-        if (removalList.contains(check)) return false;
+        if (removalList.contains(check))
+            return false;
 
         String checkName = parseUrl(check);
         if (checkName.equals(topName) || checkName.endsWith("-") || !isSameLibraryFamily(topName, checkName)) {

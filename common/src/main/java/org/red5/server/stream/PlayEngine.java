@@ -402,9 +402,12 @@ public final class PlayEngine implements IFilter, IPushableConsumer, IPipeConnec
      * @param type The play type input, which can take specific integer values.
      * @param sourceType The source type of the input,*/
     private int determineDecision(int type, IProviderService.INPUT_TYPE sourceType) {
-        if (type == -2 && sourceType == IProviderService.INPUT_TYPE.LIVE) return 0;
-        if (type == -1 && sourceType == IProviderService.INPUT_TYPE.LIVE_WAIT) return 2;
-        if (sourceType == IProviderService.INPUT_TYPE.VOD) return 1;
+        if (type == -2 && sourceType == IProviderService.INPUT_TYPE.LIVE)
+            return 0;
+        if (type == -1 && sourceType == IProviderService.INPUT_TYPE.LIVE_WAIT)
+            return 2;
+        if (sourceType == IProviderService.INPUT_TYPE.VOD)
+            return 1;
         return 3;
     }
 

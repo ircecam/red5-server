@@ -284,8 +284,7 @@ public class RTMPTSClientConnector extends RTMPTClientConnector {
      * @return an instance of {@link RTMPTClientConnection} initialized with the provided session ID
      */
     private RTMPTClientConnection createRTMPConnection(String sessionId) {
-        return (RTMPTClientConnection) RTMPClientConnManager.getInstance()
-                .createConnection(RTMPTClientConnection.class, sessionId);
+        return (RTMPTClientConnection) RTMPClientConnManager.getInstance().createConnection(RTMPTClientConnection.class, sessionId);
     }
 
     /**

@@ -60,20 +60,28 @@ public class AMF3OutputWriter extends org.red5.io.amf.Output {
 
     // Minimum value for 29-bit integer encoding
     private static final long MIN_VALUE = -268435456L;
+
     // Maximum value for 29-bit integer encoding
     private static final long MAX_VALUE = 268435455L;
+
     // Maximum value for single-byte encoding
     private static final long SINGLE_BYTE_MAX = 128L;
+
     // Maximum value for double-byte encoding
     private static final long DOUBLE_BYTE_MAX = 16384L;
+
     // Maximum value for triple-byte encoding
     private static final long TRIPLE_BYTE_MAX = 2097152L;
+
     // Maximum value for quad-byte encoding
     private static final long QUAD_BYTE_MAX = 1073741824L;
+
     // Bit mask for 7 least significant bits
     private static final long BIT_MASK_7 = 0x7F;
+
     // Bit mask for 8 bits
     private static final long BIT_MASK_8 = 0xFF;
+
     // Bit mask for 29 bits
     private static final long BIT_MASK_29 = 0x1FFFFFFF;
 

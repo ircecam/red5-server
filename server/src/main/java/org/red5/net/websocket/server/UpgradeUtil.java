@@ -115,9 +115,7 @@ public class UpgradeUtil {
         validateRsvBits(transformation);
 
         // convert transformations to extensions
-        List<Extension> negotiatedExtensions = transformations.stream()
-                .map(Transformation::getExtensionResponse)
-                .collect(Collectors.toList());
+        List<Extension> negotiatedExtensions = transformations.stream().map(Transformation::getExtensionResponse).collect(Collectors.toList());
 
         // prepare response headers
         prepareResponseHeaders(resp, key, subProtocol, transformations);
@@ -148,6 +146,7 @@ public class UpgradeUtil {
             throw new IllegalArgumentException("Missing or invalid 'Sec-WebSocket-Version' header");
         }
     }
+
     /**
      * Validates the WebSocket key by checking the presence of the 'Sec-WebSocket-Key' header in the request.
      * If the header is missing or empty, sends an error response to the client and logs the issue.
@@ -166,6 +165,7 @@ public class UpgradeUtil {
         }
         return key;
     }
+
     /**
      * Validates the origin of the HTTP request for the WebSocket connection.
      * This ensures that the origin header value is allowed as per the server's configuration.
@@ -186,6 +186,7 @@ public class UpgradeUtil {
         }
         return true;
     }
+
     /**
      * Negotiates the sub-protocol to be used in a WebSocket connection based on the values provided
      * in the HTTP request and the server's endpoint configuration.
@@ -199,6 +200,7 @@ public class UpgradeUtil {
         List<String> subProtocols = getTokensFromHeader(req, Constants.WS_PROTOCOL_HEADER_NAME);
         return sec.getConfigurator().getNegotiatedSubprotocol(sec.getSubprotocols(), subProtocols);
     }
+
     /**
      * Handles the negotiation and processing of WebSocket extensions during the upgrade process.
      *
@@ -224,6 +226,7 @@ public class UpgradeUtil {
 
         return transformations;
     }
+
     /**
      * Parses the WebSocket extension headers from the given HTTP servlet request
      * and constructs a list of requested extensions.
@@ -239,6 +242,7 @@ public class UpgradeUtil {
         }
         return extensionsRequested;
     }
+
     /**
      * Constructs a linked transformation pipeline from a list of individual transformations.
      *
@@ -259,6 +263,7 @@ public class UpgradeUtil {
         }
         return transformation;
     }
+
     /**
      * Validates the RSV (Reserved) bits in the given transformation.
      * Throws a {@link ServletException} if the validation fails.
@@ -272,6 +277,7 @@ public class UpgradeUtil {
             throw new ServletException(sm.getString("upgradeUtil.incompatibleRsv"));
         }
     }
+
     /**
      * Prepares the HTTP response headers required for the WebSocket handshake.
      *
@@ -318,17 +324,8 @@ public class UpgradeUtil {
 
         return responseHeader.toString();
     }
-    private static void finalizeWebSocketSession(
-            DefaultWsServerContainer sc,
-            HttpServletRequest req,
-            HttpServletResponse resp,
-            ServerEndpointConfig sec,
-            Map<String, String> pathParams,
-            String key,
-            String subProtocol,
-            List<Extension> negotiatedExtensions,
-            Transformation transformation
-    ) throws ServletException, IOException {
+
+    private static void finalizeWebSocketSession(DefaultWsServerContainer sc, HttpServletRequest req, HttpServletResponse resp, ServerEndpointConfig sec, Map<String, String> pathParams, String key, String subProtocol, List<Extension> negotiatedExtensions, Transformation transformation) throws ServletException, IOException {
         WsHandshakeRequest wsRequest = new WsHandshakeRequest(req, pathParams);
         WsHandshakeResponse wsResponse = new WsHandshakeResponse();
         WsPerSessionServerEndpointConfig perSessionServerEndpointConfig = new WsPerSessionServerEndpointConfig(sec);
@@ -350,17 +347,11 @@ public class UpgradeUtil {
         }
 
         WsHttpUpgradeHandler wsHandler = req.upgrade(WsHttpUpgradeHandler.class);
-        SessionConfig sessionConfig = new SessionConfig(
-                wsRequest,
-                negotiatedExtensions,
-                subProtocol,
-                transformation,
-                pathParams,
-                req.isSecure()
-        );
+        SessionConfig sessionConfig = new SessionConfig(wsRequest, negotiatedExtensions, subProtocol, transformation, pathParams, req.isSecure());
 
         wsHandler.preInit(ep, perSessionServerEndpointConfig, sc, sessionConfig);
     }
+
     /**
      * Creates an instance of the Endpoint based on the ServerEndpointConfig.
      */

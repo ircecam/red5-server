@@ -83,7 +83,7 @@ public class OutboundHandshake extends RTMPHandshake {
     }
 
     /**
-     * Generates the C2 response bytes for the handshake process. 
+     * Generates the C2 response bytes for the handshake process.
      *
      * @param s1 the server's first handshake response (S1) used as input for digest calculation
      * @return the generated C2 response as an IoBuffer
@@ -91,16 +91,16 @@ public class OutboundHandshake extends RTMPHandshake {
     private IoBuffer generateC2Response(byte[] s1) {
         BigInteger bi = new BigInteger(Constants.HANDSHAKE_SIZE * 8, random);
         byte[] c2 = BigIntegers.asUnsignedByteArray(bi);
-        
+
         byte[] digestResp = new byte[DIGEST_LENGTH];
         byte[] signatureResp = new byte[DIGEST_LENGTH];
         calculateHandshakeDigest(s1, digestPosServer, GENUINE_FP_KEY, digestResp);
         calculateHMAC_SHA256(c2, 0, Constants.HANDSHAKE_SIZE - DIGEST_LENGTH, digestResp, DIGEST_LENGTH, signatureResp, 0);
 
         log.debug("Calculated digest key from secure key and server digest: {}", Hex.encodeHexString(digestResp));
-        
+
         log.debug("Client signature calculated: {}", Hex.encodeHexString(signatureResp));
-        
+
         IoBuffer response = IoBuffer.allocate(Constants.HANDSHAKE_SIZE);
         response.put(c2, 0, Constants.HANDSHAKE_SIZE - DIGEST_LENGTH);
         response.put(signatureResp);
@@ -160,10 +160,10 @@ public class OutboundHandshake extends RTMPHandshake {
         handshakeBytes[3] = (byte) timestamp;
 
         if (fp9Handshake) {
-            handshakeBytes[4] = (byte) 0x80; 
-            handshakeBytes[5] = 0;        
-            handshakeBytes[6] = 7;        
-            handshakeBytes[7] = 2;       
+            handshakeBytes[4] = (byte) 0x80;
+            handshakeBytes[5] = 0;
+            handshakeBytes[6] = 7;
+            handshakeBytes[7] = 2;
         } else {
             log.debug("Utilisation d'un handshake pré-v9.0.115.0");
             handshakeBytes[4] = 0;
@@ -292,7 +292,6 @@ public class OutboundHandshake extends RTMPHandshake {
         return true;
     }
 
-
     /**
      * Calculates a handshake digest by computing an HMAC-SHA256 hash over the given source bytes
      * using the specified digest key and writes the result to the destination array.
@@ -305,7 +304,6 @@ public class OutboundHandshake extends RTMPHandshake {
     private void calculateHandshakeDigest(byte[] source, int offset, byte[] digestKey, byte[] destination) {
         calculateHMAC_SHA256(source, offset, DIGEST_LENGTH, digestKey, digestKey.length, destination, 0);
     }
-
 
     /**
      * Handles the setup of encryption during the handshake process.

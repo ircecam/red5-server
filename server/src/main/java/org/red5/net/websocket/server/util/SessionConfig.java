@@ -3,7 +3,6 @@ package org.red5.net.websocket.server.util;
 import org.apache.tomcat.websocket.Transformation;
 import org.red5.net.websocket.server.WsHandshakeRequest;
 
-
 import javax.websocket.Extension;
 import java.util.List;
 import java.util.Map;
@@ -18,22 +17,27 @@ public class SessionConfig {
      * Represents the WebSocket handshake request used to initialize the session.
      */
     private final WsHandshakeRequest handshakeRequest;
+
     /**
      * A list of WebSocket protocol extensions that were successfully negotiated during the handshake process.
      */
     private final List<Extension> negotiatedExtensions;
+
     /**
      * Represents the sub-protocol negotiated during the WebSocket handshake.
      */
     private final String subProtocol;
+
     /**
      * Represents the transformation applied to WebSocket messages.
      */
     private final Transformation transformation;
+
     /**
      * A map representing path parameters derived from the WebSocket session's URI template.
      */
     private final Map<String, String> pathParameters;
+
     /**
      * Indicates whether the WebSocket session is conducted over a secure connection (e.g., using wss).
      * If true, the session uses a secure protocol; if false, it uses an insecure protocol.
@@ -50,12 +54,7 @@ public class SessionConfig {
      * @param pathParameters A map of path parameters inferred from the WebSocket endpoint URI.
      * @param secure A boolean indicating whether the WebSocket session is operating over a secure (e.g., wss) connection.
      */
-    public SessionConfig(WsHandshakeRequest handshakeRequest,
-                         List<Extension> negotiatedExtensions,
-                         String subProtocol,
-                         Transformation transformation,
-                         Map<String, String> pathParameters,
-                         boolean secure) {
+    public SessionConfig(WsHandshakeRequest handshakeRequest, List<Extension> negotiatedExtensions, String subProtocol, Transformation transformation, Map<String, String> pathParameters, boolean secure) {
         this.handshakeRequest = handshakeRequest;
         this.negotiatedExtensions = negotiatedExtensions;
         this.subProtocol = subProtocol;

@@ -3,8 +3,6 @@ package org.red5.server.net.protocol;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 
-
-
 public class RTMPDecodeStateTest {
 
     @Test
