@@ -8,6 +8,7 @@
 package org.red5.client.net.rtmp;
 
 import java.util.Arrays;
+import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
@@ -15,6 +16,7 @@ import java.util.concurrent.CopyOnWriteArraySet;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 
+import org.red5.client.net.rtmp.utils_for_handler.*;
 import org.red5.io.utils.ObjectMap;
 import org.red5.server.api.IConnection;
 import org.red5.server.api.event.IEvent;
@@ -25,6 +27,7 @@ import org.red5.server.api.service.IServiceCall;
 import org.red5.server.api.service.IServiceInvoker;
 import org.red5.server.api.so.IClientSharedObject;
 import org.red5.server.api.stream.IClientStream;
+import org.red5.server.api.stream.IStreamCapableConnection;
 import org.red5.server.messaging.IMessage;
 import org.red5.server.net.ICommand;
 import org.red5.server.net.rtmp.BaseRTMPHandler;
@@ -551,7 +554,7 @@ public abstract class BaseRTMPClientHandler extends BaseRTMPHandler implements I
     @Override
     public void createStream(IPendingServiceCallback callback) {
         log.debug("createStream - callback: {}", callback);
-        IPendingServiceCallback wrapper = new CreateStreamCallBack(callback);
+        IPendingServiceCallback wrapper = new CreateStreamCallBack(callback, this);
         invoke("createStream", null, wrapper);
     }
 
@@ -563,13 +566,13 @@ public abstract class BaseRTMPClientHandler extends BaseRTMPHandler implements I
 
     public void deleteStream(IPendingServiceCallback callback) {
         log.debug("deleteStream - callback: {}", callback);
-        IPendingServiceCallback wrapper = new DeleteStreamCallBack(callback);
+        IPendingServiceCallback wrapper = new DeleteStreamCallBack(callback, this);
         invoke("deleteStream", null, wrapper);
     }
 
     public void subscribe(IPendingServiceCallback callback, Object[] params) {
         log.debug("subscribe - callback: {}", callback);
-        IPendingServiceCallback wrapper = new SubscribeStreamCallBack(callback);
+        IPendingServiceCallback wrapper = new SubscribeStreamCallBack(callback, this);
         invoke("FCSubscribe", params, wrapper);
     }
 
@@ -994,192 +997,22 @@ public abstract class BaseRTMPClientHandler extends BaseRTMPHandler implements I
         this.streamEventHandler = streamEventHandler;
     }
 
-    private static class NetStream extends AbstractClientStream implements IEventDispatcher {
-
-        private IEventDispatcher dispatcher;
-
-        public NetStream(IEventDispatcher dispatcher) {
-            this.dispatcher = dispatcher;
-        }
-
-        @Override
-        public void close() {
-            log.debug("NetStream close");
-        }
-
-        @Override
-        public void start() {
-            log.debug("NetStream start");
-        }
-
-        @Override
-        public void stop() {
-            log.debug("NetStream stop");
-        }
-
-        @Override
-        public void dispatchEvent(IEvent event) {
-            log.debug("NetStream dispatchEvent: {}", event);
-            if (dispatcher != null) {
-                dispatcher.dispatchEvent(event);
-            }
-        }
+    public void setSubscribed(boolean subscribed) {
+        this.subscribed = subscribed;
     }
 
-    private class CreateStreamCallBack implements IPendingServiceCallback {
-
-        private IPendingServiceCallback wrapped;
-
-        public CreateStreamCallBack(IPendingServiceCallback wrapped) {
-            log.debug("CreateStreamCallBack {}", wrapped.getClass().getName());
-            this.wrapped = wrapped;
-        }
-
-        @Override
-        public void resultReceived(IPendingServiceCall call) {
-            // get the result as base object
-            Object callResult = call.getResult();
-            if (callResult != null) {
-                // we expect a number consisting of the stream id, but we'll check for an object map as well
-                int streamId = -1;
-                if (callResult instanceof Number) {
-                    streamId = ((Number) callResult).intValue();
-                } else if (callResult instanceof Map) {
-                    Map<?, ?> map = (Map<?, ?>) callResult;
-                    // XXX(paul) log out the map contents
-                    log.warn("CreateStreamCallBack resultReceived - map: {}", map);
-                    if (map.containsKey("streamId")) {
-                        Object tmpStreamId = map.get("streamId");
-                        if (tmpStreamId instanceof Number) {
-                            streamId = ((Number) tmpStreamId).intValue();
-                        } else {
-                            log.warn("CreateStreamCallBack resultReceived - stream id is not a number: {}", tmpStreamId);
-                        }
-                    }
-                }
-                log.debug("CreateStreamCallBack resultReceived - stream id: {} call: {} connection: {}", streamId, call, conn);
-                if (conn != null && streamId != -1) {
-                    log.debug("Setting new net stream");
-                    NetStream stream = new NetStream(streamEventDispatcher);
-                    stream.setConnection(conn);
-                    stream.setStreamId(streamId);
-                    conn.addClientStream(stream);
-                    NetStreamPrivateData streamData = new NetStreamPrivateData(streamId);
-                    streamData.outputStream = conn.createOutputStream(streamId);
-                    streamData.connConsumer = new ConnectionConsumer(conn, streamData.outputStream.getVideo(), streamData.outputStream.getAudio(), streamData.outputStream.getData());
-                    streamDataList.add(streamData);
-                    log.debug("streamDataList: {}", streamDataList);
-                }
-                wrapped.resultReceived(call);
-            } else {
-                log.warn("CreateStreamCallBack resultReceived - call result is null");
-            }
-        }
+    public CopyOnWriteArraySet<NetStreamPrivateData> getStreamDataList() {
+        return streamDataList;
+    }
+    
+    
+    public IEventDispatcher getStreamEventDispatcher() {
+        return streamEventDispatcher;
     }
 
-    private class ReleaseStreamCallBack implements IPendingServiceCallback {
 
-        private IPendingServiceCallback wrapped;
-
-        public ReleaseStreamCallBack(IPendingServiceCallback wrapped) {
-            log.debug("ReleaseStreamCallBack {}", wrapped.getClass().getName());
-            this.wrapped = wrapped;
-        }
-
-        @Override
-        public void resultReceived(IPendingServiceCall call) {
-            wrapped.resultReceived(call);
-        }
+    public INetStreamEventHandler getStreamEventHandler() {
+        return streamEventHandler;
     }
-
-    private class DeleteStreamCallBack implements IPendingServiceCallback {
-
-        private IPendingServiceCallback wrapped;
-
-        public DeleteStreamCallBack(IPendingServiceCallback wrapped) {
-            log.debug("DeleteStreamCallBack {}", wrapped.getClass().getName());
-            this.wrapped = wrapped;
-        }
-
-        @Override
-        public void resultReceived(IPendingServiceCall call) {
-            // get the result as base object
-            Object callResult = call.getResult();
-            if (callResult != null) {
-                // we expect a number consisting of the stream id, but we'll check for an object map as well
-                final Number streamId = (Number) (callResult instanceof Number ? callResult : (callResult instanceof Map ? ((Map<?, ?>) callResult).get("streamId") : 1.0));
-                log.debug("DeleteStreamCallBack resultReceived - stream id: {} call: {} connection: {}", streamId, call, conn);
-                if (conn != null) {
-                    log.debug("Deleting net stream");
-                    conn.removeClientStream(streamId);
-                    // send a delete notify?
-                    final int sid = streamId.intValue();
-                    NetStreamPrivateData streamData = streamDataList.stream().filter(s -> s.getStreamId() == sid).findFirst().orElse(null);
-                    if (streamData != null) {
-                        streamDataList.remove(streamData);
-                    } else {
-                        log.warn("Stream data not found for stream id: {}", streamId);
-                    }
-                }
-                wrapped.resultReceived(call);
-            } else {
-                log.warn("DeleteStreamCallBack resultReceived - call result is null");
-            }
-        }
-    }
-
-    private class SubscribeStreamCallBack implements IPendingServiceCallback {
-
-        private IPendingServiceCallback wrapped;
-
-        public SubscribeStreamCallBack(IPendingServiceCallback wrapped) {
-            log.debug("SubscribeStreamCallBack {}", wrapped.getClass().getName());
-            this.wrapped = wrapped;
-        }
-
-        @Override
-        public void resultReceived(IPendingServiceCall call) {
-            log.debug("resultReceived", call);
-            if (call.getResult() instanceof ObjectMap<?, ?>) {
-                ObjectMap<?, ?> map = (ObjectMap<?, ?>) call.getResult();
-                if (map.containsKey("code")) {
-                    String code = (String) map.get("code");
-                    log.debug("Code: {}", code);
-                    if (StatusCodes.NS_PLAY_START.equals(code)) {
-                        subscribed = true;
-                    }
-                }
-            }
-            wrapped.resultReceived(call);
-        }
-    }
-
-    private final class NetStreamPrivateData {
-
-        public volatile INetStreamEventHandler handler;
-
-        public volatile OutputStream outputStream;
-
-        public volatile ConnectionConsumer connConsumer;
-
-        private final int streamId;
-
-        NetStreamPrivateData(int streamId) {
-            this.streamId = streamId;
-            if (streamEventHandler != null) {
-                handler = streamEventHandler;
-            }
-        }
-
-        public int getStreamId() {
-            return streamId;
-        }
-
-        @Override
-        public int hashCode() {
-            return streamId;
-        }
-
-    }
-
+    
 }
