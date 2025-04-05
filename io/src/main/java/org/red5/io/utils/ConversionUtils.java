@@ -104,12 +104,14 @@ public class ConversionUtils {
                 throw new ConversionException(String.format("Unable to convert null to primitive value of %s", target));
             }
             return source;
-        } else if ((source instanceof Float && ((Float) source).isNaN()) || (source instanceof Double && ((Double) source).isNaN())) {
-            // Don't convert NaN values
+        } else if ((source instanceof Float && ((Float) source).isNaN()) ||
+                (source instanceof Double && ((Double) source).isNaN())) {
             return source;
         }
+
         final Class<?> sourceClass = source.getClass();
         log.debug("Source: {} target: {}", sourceClass, target);
+
         if (target.isInstance(source) || target.isAssignableFrom(sourceClass)) {
             log.debug("Source: {} is already an instance of: {}", source, target);
             return source;
@@ -130,6 +132,19 @@ public class ConversionUtils {
         if (target.equals(Map.class)) {
             return convertBeanToMap(source);
         }
+        if (target.equals(Set.class)) {
+            log.debug("Converting source: {} to a set", source);
+
+            if (source instanceof List<?>) {
+                return new HashSet<>((List<?>) source);
+            }
+
+            if (sourceClass.isArray()) {
+                return Arrays.stream((Object[]) source).collect(Collectors.toCollection(HashSet::new));
+            }
+
+            throw new ConversionException(String.format("Unable to perform conversion from %s to Set", source));
+        }
         if (sourceClass.equals(LinkedHashMap.class)) {
             return convertMapToList((LinkedHashMap<?, ?>) source);
         } else if (sourceClass.isArray()) {
@@ -138,17 +153,13 @@ public class ConversionUtils {
                 return Arrays.stream((Object[]) source).collect(Collectors.toCollection(ArrayList::new));
             } else if (Set.class.isAssignableFrom(target)) {
                 log.debug("Source: {} to target set: {}", source, target);
-                // special handling for sets when the source is a list
-                if (source instanceof List) {
-                    return ((List<?>) source).stream().collect(Collectors.toCollection(HashSet::new));
-                }
                 return Arrays.stream((Object[]) source).collect(Collectors.toCollection(HashSet::new));
             }
         }
         if (Map.class.isAssignableFrom(sourceClass)) {
             return convertMapToBean((Map) source, target);
         }
-        // handle immutable collections
+
         final String sourceClassName = sourceClass.getName();
         if (sourceClassName.equals("java.util.ImmutableCollections$ListN")) {
             if (Set.class.isAssignableFrom(target)) {
@@ -163,7 +174,8 @@ public class ConversionUtils {
         } else if (sourceClassName.equals("java.util.ImmutableCollections$MapN")) {
             return convertMapToBean((Map) source, target);
         }
-        throw new ConversionException(String.format("Unable to preform conversion from %s to %s", source, target));
+
+        throw new ConversionException(String.format("Unable to perform conversion from %s to %s", source, target));
     }
 
     /**
