@@ -96,7 +96,7 @@ public class DataTypes {
     public static final byte CUSTOM_MOCK_MASK = 0x20;
 
     /**
-     * Custom datatype AMF mask
+     * Custom datatype ActionMessageFormat mask
      */
     public static final byte CUSTOM_AMF_MASK = 0x30;
 
@@ -174,7 +174,7 @@ public class DataTypes {
             return "MOCK[" + (dataType - CUSTOM_MOCK_MASK) + ']';
         }
         if (dataType >= CUSTOM_AMF_MASK && dataType < CUSTOM_RTMP_MASK) {
-            return "AMF[" + (dataType - CUSTOM_AMF_MASK) + ']';
+            return "ActionMessageFormat[" + (dataType - CUSTOM_AMF_MASK) + ']';
         }
         if (dataType >= CUSTOM_RTMP_MASK && dataType < CUSTOM_JSON_MASK) {
             return "RTMP[" + (dataType - CUSTOM_RTMP_MASK) + ']';

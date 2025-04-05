@@ -8,7 +8,7 @@
 package org.red5.server.net.rtmp.message;
 
 /**
- * Class for AMF and RTMP marker values constants
+ * Class for ActionMessageFormat and RTMP marker values constants
  */
 public interface Constants {
 

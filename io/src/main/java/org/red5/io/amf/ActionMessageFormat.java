@@ -10,7 +10,7 @@ package org.red5.io.amf;
 import java.nio.charset.Charset;
 
 /**
- * These are the core AMF data types supported by Red5.
+ * These are the core ActionMessageFormat data types supported by Red5.
  *
  * For detailed specification please see the link below.
  *
@@ -19,7 +19,7 @@ import java.nio.charset.Charset;
  * @author The Red5 Project
  * @author Luke Hubbard, Codegent Ltd (luke@codegent.com)
  */
-public class AMF {
+public class ActionMessageFormat {
 
     /**
      * UTF-8 is used

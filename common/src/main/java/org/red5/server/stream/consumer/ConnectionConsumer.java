@@ -147,7 +147,7 @@ public class ConnectionConsumer implements IPushableConsumer, IPipeConnectionLis
                 log.debug("Message has negative timestamp, applying {} ts: {}", Integer.MIN_VALUE, eventTime);
                 msg.setTimestamp(eventTime);
             }
-            // get the data type (AMF)
+            // get the data type (ActionMessageFormat)
             byte dataType = msg.getDataType();
             if (isTrace) {
                 log.trace("Data type: {} source type: {}", dataType, ((BaseEvent) msg).getSourceType());

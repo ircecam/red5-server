@@ -44,10 +44,10 @@
 
         <property name="enableMinaMonitor" value="false" />
     </bean>
-    <!-- Serializes objects to AMF binary -->
+    <!-- Serializes objects to ActionMessageFormat binary -->
 
     <bean id="serializer" class="org.red5.io.object.Serializer" />
-    <!-- Deserializes objects from AMF binary -->
+    <!-- Deserializes objects from ActionMessageFormat binary -->
 
     <bean id="deserializer" class="org.red5.io.object.Deserializer" />
     <!-- Deals with StatusObjects representing statuses like FMS NetConnection.Connect.Success status -->

@@ -26,7 +26,7 @@ import org.apache.commons.beanutils.BeanMap;
 import org.apache.commons.lang3.RandomStringUtils;
 import org.junit.Before;
 import org.junit.Test;
-import org.red5.io.amf.AMF;
+import org.red5.io.amf.ActionMessageFormat;
 import org.red5.io.model.CircularRefBean;
 import org.red5.io.model.SimpleJavaBean;
 import org.red5.io.object.Deserializer;
@@ -352,12 +352,12 @@ public abstract class AbstractIOTest {
     @Test
     public void testLongString() {
         log.debug("\ntestLongString");
-        byte[] rndStr = new byte[AMF.LONG_STRING_LENGTH];
+        byte[] rndStr = new byte[ActionMessageFormat.LONG_STRING_LENGTH];
         Arrays.fill(rndStr, (byte) 0x65);
         //Random rnd = new Random();
         //rnd.nextBytes(rndStr);
         String inStr = new String(rndStr, StandardCharsets.UTF_8);
-        //String inStr = RandomStringUtils.random(AMF.LONG_STRING_LENGTH);
+        //String inStr = RandomStringUtils.random(ActionMessageFormat.LONG_STRING_LENGTH);
         //log.trace(inStr);
         Serializer.serialize(out, inStr);
         dumpOutput();
@@ -369,7 +369,7 @@ public abstract class AbstractIOTest {
     @Test
     public void testLongString1() {
         log.debug("\ntestLongString1");
-        String inStr = RandomStringUtils.random(rnd.nextInt(AMF.LONG_STRING_LENGTH));
+        String inStr = RandomStringUtils.random(rnd.nextInt(ActionMessageFormat.LONG_STRING_LENGTH));
         log.trace(inStr);
         Serializer.serialize(out, inStr);
         dumpOutput();

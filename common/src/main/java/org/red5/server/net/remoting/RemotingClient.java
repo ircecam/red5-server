@@ -153,7 +153,7 @@ public class RemotingClient implements IRemotingClient {
         IoBuffer tmp = IoBuffer.allocate(1024);
         tmp.setAutoExpand(true);
         Output tmpOut = new Output(tmp);
-        //if the params are null send the NULL AMF type
+        //if the params are null send the NULL ActionMessageFormat type
         //this should fix APPSERVER-296
         if (params == null) {
             tmpOut.writeNull();

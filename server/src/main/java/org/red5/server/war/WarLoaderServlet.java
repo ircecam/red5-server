@@ -184,7 +184,7 @@ public class WarLoaderServlet extends ContextLoaderListener {
                         DriverManager.deregisterDriver(driver);
                     }
                 }
-                // clear the AMF output cache
+                // clear the ActionMessageFormat output cache
                 Output.destroyCache();
                 // stop the logger
                 try {

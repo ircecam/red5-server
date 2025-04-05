@@ -31,7 +31,7 @@ import org.red5.io.utils.IOUtils;
  * @author Luke Hubbard, Codegent Ltd (luke@codegent.com)
  * @author Art Clarke
  */
-public class AMF3IOTest extends AbstractIOTest {
+public class ActionMessageFormat3IOTest extends AbstractIOTest {
 
     IoBuffer buf;
 

@@ -17,7 +17,7 @@ public interface StatusCodes {
     public static final String NC_CALL_FAILED = "NetConnection.Call.Failed";
 
     /**
-     * The URI specified in the NetConnection.connect method did not specify 'rtmp' as the protocol. 'rtmp' must be specified when connecting to FMS and Red5. Either not supported version of AMF was used (3 when only 0 is supported)
+     * The URI specified in the NetConnection.connect method did not specify 'rtmp' as the protocol. 'rtmp' must be specified when connecting to FMS and Red5. Either not supported version of ActionMessageFormat was used (3 when only 0 is supported)
      */
     public static final String NC_CALL_BADVERSION = "NetConnection.Call.BadVersion";
 

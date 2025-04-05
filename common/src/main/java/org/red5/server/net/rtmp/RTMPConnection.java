@@ -88,7 +88,7 @@ import org.springframework.util.concurrent.ListenableFutureCallback;
 import org.springframework.util.concurrent.ListenableFutureTask;
 
 /**
- * RTMP connection. Stores information about client streams, data transfer channels, pending RPC calls, bandwidth configuration, AMF
+ * RTMP connection. Stores information about client streams, data transfer channels, pending RPC calls, bandwidth configuration, ActionMessageFormat
  * encoding type (AMF0/AMF3), connection state (is alive, last ping time and ping result) and session.
  */
 public abstract class RTMPConnection extends BaseConnection implements IStreamCapableConnection, IServiceCapableConnection {
@@ -621,9 +621,9 @@ public abstract class RTMPConnection extends BaseConnection implements IStreamCa
     }
 
     /**
-     * Return AMF protocol encoding used by this connection.
+     * Return ActionMessageFormat protocol encoding used by this connection.
      *
-     * @return AMF encoding used by connection
+     * @return ActionMessageFormat encoding used by connection
      */
     public Encoding getEncoding() {
         return state.getEncoding();

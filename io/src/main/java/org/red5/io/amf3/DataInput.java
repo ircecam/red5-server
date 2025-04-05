@@ -12,7 +12,7 @@ import java.nio.ByteOrder;
 import java.nio.charset.Charset;
 
 import org.apache.mina.core.buffer.IoBuffer;
-import org.red5.io.amf.AMF;
+import org.red5.io.amf.ActionMessageFormat;
 import org.red5.io.object.Deserializer;
 
 /**
@@ -156,7 +156,7 @@ public class DataInput implements IDataInput {
         int limit = buffer.limit();
         final ByteBuffer strBuf = buffer.buf();
         strBuf.limit(strBuf.position() + length);
-        final String string = AMF.CHARSET.decode(strBuf).toString();
+        final String string = ActionMessageFormat.CHARSET.decode(strBuf).toString();
         buffer.limit(limit); // Reset the limit
         return string;
     }

@@ -17,7 +17,7 @@ import java.util.Map;
 
 import org.apache.commons.codec.binary.Hex;
 import org.apache.mina.core.buffer.IoBuffer;
-import org.red5.io.amf.AMF;
+import org.red5.io.amf.ActionMessageFormat;
 import org.red5.io.amf.Output;
 import org.red5.io.amf3.AMF3;
 import org.red5.io.object.DataTypes;
@@ -713,7 +713,7 @@ public class RTMPProtocolDecoder implements Constants, IEventDecoder {
                         byte objType = in.get();
                         in.position(in.position() - 1);
                         Input propertyInput;
-                        if (objType == AMF.TYPE_AMF3_OBJECT && !(input instanceof org.red5.io.amf3.Input)) {
+                        if (objType == ActionMessageFormat.TYPE_AMF3_OBJECT && !(input instanceof org.red5.io.amf3.Input)) {
                             // The next parameter is encoded using AMF3
                             propertyInput = amf3Input;
                         } else {
@@ -725,7 +725,7 @@ public class RTMPProtocolDecoder implements Constants, IEventDecoder {
                 }
             } else {
                 final int start = in.position();
-                // the "send" event seems to encode the handler name as complete AMF string including the string type byte
+                // the "send" event seems to encode the handler name as complete ActionMessageFormat string including the string type byte
                 key = Deserializer.deserialize(input, String.class);
                 // read parameters
                 final List<Object> list = new LinkedList<Object>();
@@ -734,7 +734,7 @@ public class RTMPProtocolDecoder implements Constants, IEventDecoder {
                     in.position(in.position() - 1);
                     // determine if the object is encoded with amf3
                     Input propertyInput;
-                    if (objType == AMF.TYPE_AMF3_OBJECT && !(input instanceof org.red5.io.amf3.Input)) {
+                    if (objType == ActionMessageFormat.TYPE_AMF3_OBJECT && !(input instanceof org.red5.io.amf3.Input)) {
                         // The next parameter is encoded using AMF3
                         propertyInput = amf3Input;
                     } else {
@@ -754,7 +754,7 @@ public class RTMPProtocolDecoder implements Constants, IEventDecoder {
      * Decode the 'action' for a supplied an Invoke.
      *
      * @param encoding
-     *            AMF encoding
+     *            ActionMessageFormat encoding
      * @param in
      *            buffer
      * @param header
@@ -767,7 +767,7 @@ public class RTMPProtocolDecoder implements Constants, IEventDecoder {
         byte tmp = in.get();
         in.reset();
         Input input;
-        if (encoding == Encoding.AMF3 && tmp == AMF.TYPE_AMF3_OBJECT) {
+        if (encoding == Encoding.AMF3 && tmp == ActionMessageFormat.TYPE_AMF3_OBJECT) {
             input = new org.red5.io.amf3.Input(in);
             ((org.red5.io.amf3.Input) input).enforceAMF3();
         } else {
@@ -1037,7 +1037,7 @@ public class RTMPProtocolDecoder implements Constants, IEventDecoder {
                 log.debug("Object encoding: {}", objectEncodingType);
                 in.position(in.position() - 1);
                 switch (objectEncodingType) {
-                    case AMF.TYPE_AMF3_OBJECT:
+                    case ActionMessageFormat.TYPE_AMF3_OBJECT:
                     case AMF3.TYPE_VECTOR_NUMBER:
                     case AMF3.TYPE_VECTOR_OBJECT:
                         // The next parameter is encoded using AMF3

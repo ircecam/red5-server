@@ -25,7 +25,7 @@ import org.red5.io.utils.IOUtils;
 import org.red5.io.utils.ObjectMap;
 
 /**
- * AMF I/O test
+ * ActionMessageFormat I/O test
  *
  * @author The Red5 Project
  * @author Luke Hubbard, Codegent Ltd (luke@codegent.com)
@@ -84,13 +84,13 @@ public class AMFIOTest extends AbstractIOTest {
     public void testAMF0Wiki2() throws Exception {
         log.debug("\ntestAMF0Wiki2");
         /*
-         * The AMF message starts with a 0x03 which denotes an RTMP packet with Header Type of 0, so 12 bytes are expected to follow. It is of Message Type 0x14, which denotes a command in
+         * The ActionMessageFormat message starts with a 0x03 which denotes an RTMP packet with Header Type of 0, so 12 bytes are expected to follow. It is of Message Type 0x14, which denotes a command in
          * the form of a string of value "_result" and two serialized objects as arguments. The message can be decoded as follows: (command) "_result" (transaction id) 1 (value) [1] {
          * fmsVer: "FMS/3,5,5,2004" capabilities: 31.0 mode: 1.0 }, [2] { level: "status", code: "NetConnection.Connect.Success", description: "Connection succeeded", data: (array) {
          * version: "3,5,5,2004" }, clientId: 1584259571.0, objectEncoding: 3.0 } Here one can see an array (in turquoise) as a value of the 'data' key which has one member. We can see the
          * objectEncoding value to be 3. This means that subsequent messages are going to be sent with the 0x11 message type, which will imply an AMF3 encoding.
          */
-        // AMF packet
+        // ActionMessageFormat packet
         IoBuffer data = IoBuffer.wrap(IOUtils.hexStringToByteArray(
                 "03 00 00 00 00 01 05 14 00 00 00 00 02 00 07 5F 72 65 73 75 6C 74 00 3F F0 00 00 00 00 00 00 03 00 06 66 6D 73 56 65 72 02 00 0E 46 4D 53 2F 33 2C 35 2C 35 2C 32 30 30 34 00 0C 63 61 70 61 62 69 6C 69 74 69 65 73 00 40 3F 00 00 00 00 00 00 00 04 6D 6F 64 65 00 3F F0 00 00 00 00 00 00 00 00 09 03 00 05 6C 65 76 65 6C 02 00 06 73 74 61 74 75 73 00 04 63 6F 64 65 02 00 1D 4E 65 74 43 6F 6E 6E 65 63 74 69 6F 6E 2E 43 6F 6E 6E 65 63 74 2E 53 75 63 63 65 73 73 00 0B 64 65 73 63 72 69 70 74 69 6F 6E 02 00 15 43 6F 6E 6E 65 63 74 69 6F 6E 20 73 75 63 63 65 65 64 65 64 2E 00 04 64 61 74 61 08 00 00 00 01 00 07 76 65 72 73 69 6F 6E 02 00 0A 33 2C 35 2C 35 2C 32 30 30 34 00 00 09 00 08 63 6C 69 65 6E 74 69 64 00 41 D7 9B 78 7C C0 00 00 00 0E 6F 62 6A 65 63 74 45 6E 63 6F 64 69 6E 67 00 40 08 00 00 00 00 00 00 00 00 09"));
         byte headerByte = data.get();

@@ -620,7 +620,7 @@ public class RTMPProtocolEncoder implements Constants, IEventEncoder {
     public IoBuffer encodeFlexSharedObject(ISharedObjectMessage so) {
         final IoBuffer out = IoBuffer.allocate(128);
         out.setAutoExpand(true);
-        out.put((byte) 0x00); // unknown (not AMF version)
+        out.put((byte) 0x00); // unknown (not ActionMessageFormat version)
         doEncodeSharedObject(so, out);
         return out;
     }

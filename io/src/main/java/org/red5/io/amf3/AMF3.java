@@ -74,7 +74,7 @@ public class AMF3 {
 
     /**
      * XML document marker <br>
-     * This is for the legacy XMLDocument type is retained in the language as flash.xml.XMLDocument. Similar to AMF 0, the structure of an XMLDocument needs to be flattened into a string representation for serialization. As with other strings in AMF, the content is encoded in UTF-8. XMLDocuments can be sent as a reference to a previously occurring XMLDocument instance by using an index to the implicit object
+     * This is for the legacy XMLDocument type is retained in the language as flash.xml.XMLDocument. Similar to ActionMessageFormat 0, the structure of an XMLDocument needs to be flattened into a string representation for serialization. As with other strings in ActionMessageFormat, the content is encoded in UTF-8. XMLDocuments can be sent as a reference to a previously occurring XMLDocument instance by using an index to the implicit object
      * reference table.
      */
     public static final byte TYPE_XML_DOCUMENT = 0x07;

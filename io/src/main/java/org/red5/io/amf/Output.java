@@ -120,7 +120,7 @@ public class Output extends BaseOutput implements org.red5.io.object.Output {
         log.debug("writeArray - (collection source) array: {}", array);
         if (!checkWriteReference(array)) {
             storeReference(array);
-            buf.put(AMF.TYPE_ARRAY);
+            buf.put(ActionMessageFormat.TYPE_ARRAY);
             buf.putInt(array.size());
             for (Object item : array) {
                 Serializer.serialize(this, item);
@@ -135,7 +135,7 @@ public class Output extends BaseOutput implements org.red5.io.object.Output {
         if (array != null) {
             if (!checkWriteReference(array)) {
                 storeReference(array);
-                buf.put(AMF.TYPE_ARRAY);
+                buf.put(ActionMessageFormat.TYPE_ARRAY);
                 buf.putInt(array.length);
                 for (Object item : array) {
                     Serializer.serialize(this, item);
@@ -153,7 +153,7 @@ public class Output extends BaseOutput implements org.red5.io.object.Output {
         if (array != null) {
             if (!checkWriteReference(array)) {
                 storeReference(array);
-                buf.put(AMF.TYPE_ARRAY);
+                buf.put(ActionMessageFormat.TYPE_ARRAY);
                 final int length = Array.getLength(array);
                 buf.putInt(length);
                 for (int i = 0; i < length; i++) {
@@ -171,7 +171,7 @@ public class Output extends BaseOutput implements org.red5.io.object.Output {
         //log.info("writeMap: {}", map);
         if (!checkWriteReference(map)) {
             storeReference(map);
-            buf.put(AMF.TYPE_MIXED_ARRAY);
+            buf.put(ActionMessageFormat.TYPE_MIXED_ARRAY);
             int maxInt = -1;
             for (int i = 0; i < map.size(); i++) {
                 try {
@@ -199,7 +199,7 @@ public class Output extends BaseOutput implements org.red5.io.object.Output {
                 putString("length");
                 Serializer.serialize(this, maxInt + 1);
             }
-            buf.put(AMF.END_OF_OBJECT_SEQUENCE);
+            buf.put(ActionMessageFormat.END_OF_OBJECT_SEQUENCE);
         }
     }
 
@@ -208,7 +208,7 @@ public class Output extends BaseOutput implements org.red5.io.object.Output {
     public void writeMap(Collection<?> array) {
         if (!checkWriteReference(array)) {
             storeReference(array);
-            buf.put(AMF.TYPE_MIXED_ARRAY);
+            buf.put(ActionMessageFormat.TYPE_MIXED_ARRAY);
             buf.putInt(array.size() + 1);
             int idx = 0;
             for (Object item : array) {
@@ -221,7 +221,7 @@ public class Output extends BaseOutput implements org.red5.io.object.Output {
             }
             putString("length");
             Serializer.serialize(this, array.size() + 1);
-            buf.put(AMF.END_OF_OBJECT_SEQUENCE);
+            buf.put(ActionMessageFormat.END_OF_OBJECT_SEQUENCE);
         }
     }
 
@@ -231,7 +231,7 @@ public class Output extends BaseOutput implements org.red5.io.object.Output {
         if (!checkWriteReference(recordset)) {
             storeReference(recordset);
             // Write out start of object marker
-            buf.put(AMF.TYPE_CLASS_OBJECT);
+            buf.put(ActionMessageFormat.TYPE_CLASS_OBJECT);
             putString("RecordSet");
             // Serialize
             Map<String, Object> info = recordset.serialize();
@@ -240,15 +240,15 @@ public class Output extends BaseOutput implements org.red5.io.object.Output {
             // Serialize
             Serializer.serialize(this, info);
             // Write out end of object marker
-            buf.put(AMF.END_OF_OBJECT_SEQUENCE);
+            buf.put(ActionMessageFormat.END_OF_OBJECT_SEQUENCE);
         }
     }
 
     /** {@inheritDoc} */
     @Override
     public void writeBoolean(Boolean bol) {
-        buf.put(AMF.TYPE_BOOLEAN);
-        buf.put(bol ? AMF.VALUE_TRUE : AMF.VALUE_FALSE);
+        buf.put(ActionMessageFormat.TYPE_BOOLEAN);
+        buf.put(bol ? ActionMessageFormat.VALUE_TRUE : ActionMessageFormat.VALUE_FALSE);
     }
 
     /** {@inheritDoc} */
@@ -259,7 +259,7 @@ public class Output extends BaseOutput implements org.red5.io.object.Output {
     /** {@inheritDoc} */
     @Override
     public void writeDate(Date date) {
-        buf.put(AMF.TYPE_DATE);
+        buf.put(ActionMessageFormat.TYPE_DATE);
         buf.putDouble(date.getTime());
         buf.putShort((short) (TimeZone.getDefault().getRawOffset() / 60 / 1000));
     }
@@ -268,13 +268,13 @@ public class Output extends BaseOutput implements org.red5.io.object.Output {
     @Override
     public void writeNull() {
         // System.err.println("Write null");
-        buf.put(AMF.TYPE_NULL);
+        buf.put(ActionMessageFormat.TYPE_NULL);
     }
 
     /** {@inheritDoc} */
     @Override
     public void writeNumber(Number num) {
-        buf.put(AMF.TYPE_NUMBER);
+        buf.put(ActionMessageFormat.TYPE_NUMBER);
         buf.putDouble(num.doubleValue());
     }
 
@@ -282,7 +282,7 @@ public class Output extends BaseOutput implements org.red5.io.object.Output {
     @Override
     public void writeReference(Object obj) {
         log.debug("Write reference");
-        buf.put(AMF.TYPE_REFERENCE);
+        buf.put(ActionMessageFormat.TYPE_REFERENCE);
         buf.putShort(getReferenceId(obj));
     }
 
@@ -305,14 +305,14 @@ public class Output extends BaseOutput implements org.red5.io.object.Output {
             // write out either start of object marker for class name or "empty" start of object marker
             Class<?> objectClass = object.getClass();
             if (!objectClass.isAnnotationPresent(Anonymous.class)) {
-                buf.put(AMF.TYPE_CLASS_OBJECT);
+                buf.put(ActionMessageFormat.TYPE_CLASS_OBJECT);
                 putString(buf, Serializer.getClassName(objectClass));
             } else {
-                buf.put(AMF.TYPE_OBJECT);
+                buf.put(ActionMessageFormat.TYPE_OBJECT);
             }
             // if (object instanceof ICustomSerializable) {
             //     ((ICustomSerializable) object).serialize(this);
-            //     buf.put(AMF.END_OF_OBJECT_SEQUENCE);
+            //     buf.put(ActionMessageFormat.END_OF_OBJECT_SEQUENCE);
             //     return;
             // }
             // Iterate thru entries and write out property names with separators
@@ -329,7 +329,7 @@ public class Output extends BaseOutput implements org.red5.io.object.Output {
                 Serializer.serialize(this, field, getter, object, beanMap.get(key));
             }
             // write out end of object mark
-            buf.put(AMF.END_OF_OBJECT_SEQUENCE);
+            buf.put(ActionMessageFormat.END_OF_OBJECT_SEQUENCE);
         }
     }
 
@@ -405,7 +405,7 @@ public class Output extends BaseOutput implements org.red5.io.object.Output {
     public void writeObject(Map<Object, Object> map) {
         if (!checkWriteReference(map)) {
             storeReference(map);
-            buf.put(AMF.TYPE_OBJECT);
+            buf.put(ActionMessageFormat.TYPE_OBJECT);
             boolean isBeanMap = (map instanceof BeanMap);
             for (Map.Entry<Object, Object> entry : map.entrySet()) {
                 log.debug("Key: {} item: {}", entry.getKey(), entry.getValue());
@@ -415,7 +415,7 @@ public class Output extends BaseOutput implements org.red5.io.object.Output {
                 putString(entry.getKey().toString());
                 Serializer.serialize(this, entry.getValue());
             }
-            buf.put(AMF.END_OF_OBJECT_SEQUENCE);
+            buf.put(ActionMessageFormat.END_OF_OBJECT_SEQUENCE);
         }
     }
 
@@ -431,11 +431,11 @@ public class Output extends BaseOutput implements org.red5.io.object.Output {
         Class<?> objectClass = object.getClass();
         if (!objectClass.isAnnotationPresent(Anonymous.class)) {
             // Write out start object marker for class name
-            buf.put(AMF.TYPE_CLASS_OBJECT);
+            buf.put(ActionMessageFormat.TYPE_CLASS_OBJECT);
             putString(buf, Serializer.getClassName(objectClass));
         } else {
             // Write out start object marker without class name
-            buf.put(AMF.TYPE_OBJECT);
+            buf.put(ActionMessageFormat.TYPE_OBJECT);
         }
         // Iterate thru fields of an object to build "name-value" map from it
         for (Field field : objectClass.getFields()) {
@@ -459,7 +459,7 @@ public class Output extends BaseOutput implements org.red5.io.object.Output {
             Serializer.serialize(this, field, null, object, value);
         }
         // write out end of object marker
-        buf.put(AMF.END_OF_OBJECT_SEQUENCE);
+        buf.put(ActionMessageFormat.END_OF_OBJECT_SEQUENCE);
     }
 
     /** {@inheritDoc} */
@@ -467,13 +467,13 @@ public class Output extends BaseOutput implements org.red5.io.object.Output {
     public void writeString(String string) {
         final byte[] encoded = encodeString(string);
         final int len = encoded.length;
-        if (len < AMF.LONG_STRING_LENGTH) {
-            buf.put(AMF.TYPE_STRING);
+        if (len < ActionMessageFormat.LONG_STRING_LENGTH) {
+            buf.put(ActionMessageFormat.TYPE_STRING);
             // write unsigned short
             buf.put((byte) ((len >> 8) & 0xff));
             buf.put((byte) (len & 0xff));
         } else {
-            buf.put(AMF.TYPE_LONG_STRING);
+            buf.put(ActionMessageFormat.TYPE_LONG_STRING);
             buf.putInt(len);
         }
         buf.put(encoded);
@@ -520,7 +520,7 @@ public class Output extends BaseOutput implements org.red5.io.object.Output {
         Element element = getStringCache().get(string);
         byte[] encoded = (element == null ? null : (byte[]) element.getObjectValue());
         if (encoded == null) {
-            ByteBuffer buf = AMF.CHARSET.encode(string);
+            ByteBuffer buf = ActionMessageFormat.CHARSET.encode(string);
             encoded = new byte[buf.remaining()];
             buf.get(encoded);
             getStringCache().put(new Element(string, encoded));
@@ -538,7 +538,7 @@ public class Output extends BaseOutput implements org.red5.io.object.Output {
      */
     public static void putString(IoBuffer buf, String string) {
         final byte[] encoded = encodeString(string);
-        if (encoded.length < AMF.LONG_STRING_LENGTH) {
+        if (encoded.length < ActionMessageFormat.LONG_STRING_LENGTH) {
             // write unsigned short
             buf.put((byte) ((encoded.length >> 8) & 0xff));
             buf.put((byte) (encoded.length & 0xff));
@@ -557,7 +557,7 @@ public class Output extends BaseOutput implements org.red5.io.object.Output {
     /** {@inheritDoc} */
     @Override
     public void writeXML(Document xml) {
-        buf.put(AMF.TYPE_XML);
+        buf.put(ActionMessageFormat.TYPE_XML);
         putString(XMLUtils.docToString(xml));
     }
 
@@ -568,7 +568,7 @@ public class Output extends BaseOutput implements org.red5.io.object.Output {
      *            xml to write
      */
     public void writeXML(String xml) {
-        buf.put(AMF.TYPE_XML);
+        buf.put(ActionMessageFormat.TYPE_XML);
         putString(xml);
     }
 

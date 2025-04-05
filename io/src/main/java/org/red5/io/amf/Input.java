@@ -82,8 +82,8 @@ public class Input extends BaseInput implements org.red5.io.object.Input {
     /**
      * Reads the data type.
      *
-     * @return One of AMF class constants with type
-     * @see org.red5.io.amf.AMF
+     * @return One of ActionMessageFormat class constants with type
+     * @see ActionMessageFormat
      */
     @Override
     public byte readDataType() {
@@ -94,38 +94,38 @@ public class Input extends BaseInput implements org.red5.io.object.Input {
                 currentDataType = buf.get();
                 log.trace("Data type {}: {}", currentDataType, DataTypes.toStringValue(currentDataType));
                 switch (currentDataType) {
-                    case AMF.TYPE_NULL:
-                    case AMF.TYPE_UNDEFINED:
+                    case ActionMessageFormat.TYPE_NULL:
+                    case ActionMessageFormat.TYPE_UNDEFINED:
                         return DataTypes.CORE_NULL;
-                    case AMF.TYPE_NUMBER:
+                    case ActionMessageFormat.TYPE_NUMBER:
                         return DataTypes.CORE_NUMBER;
-                    case AMF.TYPE_BOOLEAN:
+                    case ActionMessageFormat.TYPE_BOOLEAN:
                         return DataTypes.CORE_BOOLEAN;
-                    case AMF.TYPE_STRING:
-                    case AMF.TYPE_LONG_STRING:
+                    case ActionMessageFormat.TYPE_STRING:
+                    case ActionMessageFormat.TYPE_LONG_STRING:
                         return DataTypes.CORE_STRING;
-                    case AMF.TYPE_CLASS_OBJECT:
-                    case AMF.TYPE_OBJECT:
+                    case ActionMessageFormat.TYPE_CLASS_OBJECT:
+                    case ActionMessageFormat.TYPE_OBJECT:
                         return DataTypes.CORE_OBJECT;
-                    case AMF.TYPE_MIXED_ARRAY:
+                    case ActionMessageFormat.TYPE_MIXED_ARRAY:
                         return DataTypes.CORE_MAP;
-                    case AMF.TYPE_ARRAY:
+                    case ActionMessageFormat.TYPE_ARRAY:
                         return DataTypes.CORE_ARRAY;
-                    case AMF.TYPE_DATE:
+                    case ActionMessageFormat.TYPE_DATE:
                         return DataTypes.CORE_DATE;
-                    case AMF.TYPE_XML:
+                    case ActionMessageFormat.TYPE_XML:
                         return DataTypes.CORE_XML;
-                    case AMF.TYPE_REFERENCE:
+                    case ActionMessageFormat.TYPE_REFERENCE:
                         return DataTypes.OPT_REFERENCE;
-                    case AMF.TYPE_UNSUPPORTED:
-                    case AMF.TYPE_MOVIECLIP:
-                    case AMF.TYPE_RECORDSET:
+                    case ActionMessageFormat.TYPE_UNSUPPORTED:
+                    case ActionMessageFormat.TYPE_MOVIECLIP:
+                    case ActionMessageFormat.TYPE_RECORDSET:
                         // These types are not handled by core datatypes
                         // So add the amf mask to them, this way the deserializer
                         // will call back to readCustom, we can then handle or
                         // return null
                         return (byte) (currentDataType + DataTypes.CUSTOM_AMF_MASK);
-                    case AMF.TYPE_AMF3_OBJECT:
+                    case ActionMessageFormat.TYPE_AMF3_OBJECT:
                         log.debug("Switch to AMF3");
                         return DataTypes.CORE_SWITCH;
                 }
@@ -154,7 +154,7 @@ public class Input extends BaseInput implements org.red5.io.object.Input {
      */
     @Override
     public Boolean readBoolean() {
-        return (buf.get() == AMF.VALUE_TRUE) ? Boolean.TRUE : Boolean.FALSE;
+        return (buf.get() == ActionMessageFormat.VALUE_TRUE) ? Boolean.TRUE : Boolean.FALSE;
     }
 
     /**
@@ -188,8 +188,8 @@ public class Input extends BaseInput implements org.red5.io.object.Input {
         log.trace("getString - currentDataType: {}", currentDataType);
         byte lastDataType = currentDataType;
         // temporarily set to string for reading
-        if (currentDataType != AMF.TYPE_STRING) {
-            currentDataType = AMF.TYPE_STRING;
+        if (currentDataType != ActionMessageFormat.TYPE_STRING) {
+            currentDataType = ActionMessageFormat.TYPE_STRING;
         }
         String result = readString();
         // set data type back to what it was
@@ -207,19 +207,19 @@ public class Input extends BaseInput implements org.red5.io.object.Input {
         int limit = buf.limit();
         int len = 0;
         switch (currentDataType) {
-            case AMF.TYPE_LONG_STRING:
+            case ActionMessageFormat.TYPE_LONG_STRING:
                 log.trace("Long string type");
                 len = buf.getInt();
                 if (len > limit) {
                     len = limit;
                 }
                 break;
-            case AMF.TYPE_STRING:
+            case ActionMessageFormat.TYPE_STRING:
                 log.trace("Std string type");
                 len = buf.getUnsignedShort();
                 break;
             default:
-                log.debug("Unknown AMF type: {}", currentDataType);
+                log.debug("Unknown ActionMessageFormat type: {}", currentDataType);
         }
         log.debug("Length: {} limit: {}", len, limit);
         byte[] str = new byte[len];
@@ -238,7 +238,7 @@ public class Input extends BaseInput implements org.red5.io.object.Input {
     private final String bufferToString(byte[] str) {
         String string = null;
         if (str != null) {
-            string = AMF.CHARSET.decode(ByteBuffer.wrap(str)).toString();
+            string = ActionMessageFormat.CHARSET.decode(ByteBuffer.wrap(str)).toString();
             log.debug("String: {}", string);
         } else {
             log.warn("ByteBuffer was null attempting to read String");
@@ -469,7 +469,7 @@ public class Input extends BaseInput implements org.red5.io.object.Input {
     @Override
     public Object readObject() {
         String className;
-        if (currentDataType == AMF.TYPE_CLASS_OBJECT) {
+        if (currentDataType == ActionMessageFormat.TYPE_CLASS_OBJECT) {
             className = getString();
             log.debug("readObject: {}", className);
             if (className != null) {
@@ -510,7 +510,7 @@ public class Input extends BaseInput implements org.red5.io.object.Input {
             byte[] threeBytes = new byte[3];
             int pos = buf.position();
             buf.get(threeBytes);
-            if (Arrays.equals(AMF.END_OF_OBJECT_SEQUENCE, threeBytes)) {
+            if (Arrays.equals(ActionMessageFormat.END_OF_OBJECT_SEQUENCE, threeBytes)) {
                 log.trace("End of object");
                 return false;
             }

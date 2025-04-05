@@ -25,7 +25,7 @@ import org.apache.commons.beanutils.BeanMap;
 import org.apache.mina.core.buffer.IoBuffer;
 import org.red5.annotations.Anonymous;
 import org.red5.compatibility.flex.messaging.io.ObjectProxy;
-import org.red5.io.amf.AMF;
+import org.red5.io.amf.ActionMessageFormat;
 import org.red5.io.object.RecordSet;
 import org.red5.io.object.Serializer;
 import org.red5.io.object.UnsignedInt;
@@ -89,7 +89,7 @@ public class Output extends org.red5.io.amf.Output {
 
     protected void writeAMF3() {
         if (amf3_mode == 0) {
-            buf.put(AMF.TYPE_AMF3_OBJECT);
+            buf.put(ActionMessageFormat.TYPE_AMF3_OBJECT);
         }
     }
 
@@ -134,7 +134,7 @@ public class Output extends org.red5.io.amf.Output {
         Element element = getStringCache().get(string);
         byte[] encoded = (element == null ? null : (byte[]) element.getObjectValue());
         if (encoded == null) {
-            ByteBuffer buf = AMF.CHARSET.encode(string);
+            ByteBuffer buf = ActionMessageFormat.CHARSET.encode(string);
             encoded = new byte[buf.limit()];
             buf.get(encoded);
             getStringCache().put(new Element(string, encoded));

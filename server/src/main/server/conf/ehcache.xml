@@ -16,7 +16,7 @@
         diskPersistent="false" diskExpiryThreadIntervalSeconds="120"
         memoryStoreEvictionPolicy="LFU" />
 
-    <!-- org.red5.io.amf.Output.stringCache Caches strings for output via AMF serialization. 
+    <!-- org.red5.io.amf.Output.stringCache Caches strings for output via ActionMessageFormat serialization.
         Keeps up to 1000 elements in memory, does not overflow to disk, is not eternal, and 
         expires elements after 20 minutes of inactivity. -->
     <cache name="org.red5.io.amf.Output.stringCache" maxElementsInMemory="1000"

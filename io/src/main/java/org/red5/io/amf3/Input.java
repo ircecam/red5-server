@@ -33,7 +33,7 @@ import java.util.concurrent.ConcurrentMap;
 
 import org.apache.commons.beanutils.BeanUtils;
 import org.apache.mina.core.buffer.IoBuffer;
-import org.red5.io.amf.AMF;
+import org.red5.io.amf.ActionMessageFormat;
 import org.red5.io.object.DataTypes;
 import org.red5.io.object.Deserializer;
 import org.red5.io.utils.ArrayUtils;
@@ -226,7 +226,7 @@ public class Input extends org.red5.io.amf.Input {
             currentDataType = buf.get();
             log.debug("Current data type: {}", currentDataType);
             switch (currentDataType) {
-                case AMF.TYPE_AMF3_OBJECT:
+                case ActionMessageFormat.TYPE_AMF3_OBJECT:
                     log.trace("Got AMF3 object indicator");
                     amf3_mode = 1;
                     currentDataType = buf.get();
@@ -242,28 +242,28 @@ public class Input extends org.red5.io.amf.Input {
             if (amf3_mode == 0) {
                 // AMF0 object
                 switch (currentDataType) {
-                    case AMF.TYPE_NULL:
-                    case AMF.TYPE_UNDEFINED:
+                    case ActionMessageFormat.TYPE_NULL:
+                    case ActionMessageFormat.TYPE_UNDEFINED:
                         return DataTypes.CORE_NULL;
-                    case AMF.TYPE_NUMBER:
+                    case ActionMessageFormat.TYPE_NUMBER:
                         return DataTypes.CORE_NUMBER;
-                    case AMF.TYPE_BOOLEAN:
+                    case ActionMessageFormat.TYPE_BOOLEAN:
                         return DataTypes.CORE_BOOLEAN;
-                    case AMF.TYPE_STRING:
-                    case AMF.TYPE_LONG_STRING:
+                    case ActionMessageFormat.TYPE_STRING:
+                    case ActionMessageFormat.TYPE_LONG_STRING:
                         return DataTypes.CORE_STRING;
-                    case AMF.TYPE_CLASS_OBJECT:
-                    case AMF.TYPE_OBJECT:
+                    case ActionMessageFormat.TYPE_CLASS_OBJECT:
+                    case ActionMessageFormat.TYPE_OBJECT:
                         return DataTypes.CORE_OBJECT;
-                    case AMF.TYPE_MIXED_ARRAY:
+                    case ActionMessageFormat.TYPE_MIXED_ARRAY:
                         return DataTypes.CORE_MAP;
-                    case AMF.TYPE_ARRAY:
+                    case ActionMessageFormat.TYPE_ARRAY:
                         return DataTypes.CORE_ARRAY;
-                    case AMF.TYPE_DATE:
+                    case ActionMessageFormat.TYPE_DATE:
                         return DataTypes.CORE_DATE;
-                    case AMF.TYPE_XML:
+                    case ActionMessageFormat.TYPE_XML:
                         return DataTypes.CORE_XML;
-                    case AMF.TYPE_REFERENCE:
+                    case ActionMessageFormat.TYPE_REFERENCE:
                         return DataTypes.OPT_REFERENCE;
                 }
             }
@@ -414,7 +414,7 @@ public class Input extends org.red5.io.amf.Input {
             log.debug("readString - limit: {}", limit);
             final ByteBuffer strBuf = buf.buf();
             strBuf.limit(strBuf.position() + len);
-            string = AMF.CHARSET.decode(strBuf).toString();
+            string = ActionMessageFormat.CHARSET.decode(strBuf).toString();
             log.debug("String: {}", string);
             buf.limit(limit); // reset the limit
             refStorage.stringReferences.add(string);
@@ -436,7 +436,7 @@ public class Input extends org.red5.io.amf.Input {
         int limit = buf.limit();
         final ByteBuffer strBuf = buf.buf();
         strBuf.limit(strBuf.position() + length);
-        final String string = AMF.CHARSET.decode(strBuf).toString();
+        final String string = ActionMessageFormat.CHARSET.decode(strBuf).toString();
         log.debug("String: {}", string);
         buf.limit(limit);
         // check for null termination
@@ -1103,7 +1103,7 @@ public class Input extends org.red5.io.amf.Input {
         int limit = buf.limit();
         final ByteBuffer strBuf = buf.buf();
         strBuf.limit(strBuf.position() + len);
-        final String xmlString = AMF.CHARSET.decode(strBuf).toString();
+        final String xmlString = ActionMessageFormat.CHARSET.decode(strBuf).toString();
         buf.limit(limit); // Reset the limit
         Document doc = null;
         try {
