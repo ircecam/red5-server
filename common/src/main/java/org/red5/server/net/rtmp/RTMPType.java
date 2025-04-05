@@ -26,10 +26,6 @@ public enum RTMPType {
 
     private final byte type;
 
-    RTMPType(byte type) {
-        this.type = type;
-    }
-
     RTMPType(int type) {
         this.type = (byte) type;
     }
