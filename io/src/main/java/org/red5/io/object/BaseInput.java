@@ -83,7 +83,7 @@ public class BaseInput {
      * @return true if not blacklisted and false if it is blacklisted
      */
     protected static boolean classAllowed(String className) {
-        return Deserializer.classAllowed(className);
+        return Deserializer.isClassNotBlacklisted(className);
     }
 
 }

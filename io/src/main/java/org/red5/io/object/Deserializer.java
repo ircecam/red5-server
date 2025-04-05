@@ -146,7 +146,7 @@ public class Deserializer {
      * @param className class name/package
      * @return true if not blacklisted and false if it is blacklisted
      */
-    public static boolean classAllowed(String className) {
+    public static boolean isClassNotBlacklisted(String className) {
         for (String name : BLACK_LIST) {
             if (className.startsWith(name)) {
                 return false;
