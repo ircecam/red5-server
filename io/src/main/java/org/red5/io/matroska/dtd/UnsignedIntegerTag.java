@@ -14,7 +14,7 @@ import java.io.InputStream;
 import java.nio.ByteBuffer;
 
 import org.red5.io.matroska.ParserUtils;
-import org.red5.io.matroska.VINT;
+import org.red5.io.matroska.VariableInteger;
 
 /**
  * http://matroska.org/technical/specs/index.html
@@ -28,7 +28,7 @@ public class UnsignedIntegerTag extends Tag {
     /**
      * Constructor
      *
-     * @see Tag#Tag(String, VINT)
+     * @see Tag#Tag(String, VariableInteger)
      *
      * @param name
      *            - the name of tag to be created
@@ -37,14 +37,14 @@ public class UnsignedIntegerTag extends Tag {
      * @throws IOException
      *             - in case of IO error
      */
-    public UnsignedIntegerTag(String name, VINT id) throws IOException {
+    public UnsignedIntegerTag(String name, VariableInteger id) throws IOException {
         super(name, id);
     }
 
     /**
      * Constructor
      *
-     * @see Tag#Tag(String, VINT, VINT, InputStream)
+     * @see Tag#Tag(String, VariableInteger, VariableInteger, InputStream)
      *
      * @param name
      *            - the name of tag to be created
@@ -57,7 +57,7 @@ public class UnsignedIntegerTag extends Tag {
      * @throws IOException
      *             - in case of IO error
      */
-    public UnsignedIntegerTag(String name, VINT id, VINT size, InputStream inputStream) throws IOException {
+    public UnsignedIntegerTag(String name, VariableInteger id, VariableInteger size, InputStream inputStream) throws IOException {
         super(name, id, size, inputStream);
     }
 
@@ -101,7 +101,7 @@ public class UnsignedIntegerTag extends Tag {
             length++;
             v = v >> BIT_IN_BYTE;
         }
-        size = VINT.fromValue(length);
+        size = VariableInteger.fromValue(length);
         return this;
     }
 

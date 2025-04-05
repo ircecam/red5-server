@@ -13,7 +13,7 @@ import java.io.UnsupportedEncodingException;
 import java.nio.ByteBuffer;
 
 import org.red5.io.matroska.ParserUtils;
-import org.red5.io.matroska.VINT;
+import org.red5.io.matroska.VariableInteger;
 
 /**
  * http://matroska.org/technical/specs/index.html
@@ -27,7 +27,7 @@ public class StringTag extends Tag {
     /**
      * Constructor
      *
-     * @see Tag#Tag(String, VINT)
+     * @see Tag#Tag(String, VariableInteger)
      *
      * @param name
      *            - the name of tag to be created
@@ -36,14 +36,14 @@ public class StringTag extends Tag {
      * @throws IOException
      *             - in case of IO error
      */
-    public StringTag(String name, VINT id) throws IOException {
+    public StringTag(String name, VariableInteger id) throws IOException {
         super(name, id);
     }
 
     /**
      * Constructor
      *
-     * @see Tag#Tag(String, VINT, VINT, InputStream)
+     * @see Tag#Tag(String, VariableInteger, VariableInteger, InputStream)
      *
      * @param name
      *            - the name of tag to be created
@@ -56,7 +56,7 @@ public class StringTag extends Tag {
      * @throws IOException
      *             - in case of IO error
      */
-    public StringTag(String name, VINT id, VINT size, InputStream inputStream) throws IOException {
+    public StringTag(String name, VariableInteger id, VariableInteger size, InputStream inputStream) throws IOException {
         super(name, id, size, inputStream);
     }
 
@@ -99,7 +99,7 @@ public class StringTag extends Tag {
             this.value = value;
         }
         byte[] bb = this.value.getBytes("UTF-8");
-        size = VINT.fromValue(bb.length);
+        size = VariableInteger.fromValue(bb.length);
         return this;
     }
 

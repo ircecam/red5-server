@@ -13,14 +13,14 @@ import java.nio.ByteBuffer;
 
 import org.red5.io.matroska.ConverterException;
 import org.red5.io.matroska.ParserUtils;
-import org.red5.io.matroska.VINT;
+import org.red5.io.matroska.VariableInteger;
 
 /**
  * Tag representing complex block of different tags
  *
  */
 public class SimpleBlock extends Tag {
-    private VINT trackNumber;
+    private VariableInteger trackNumber;
 
     private long timeCode;
 
@@ -31,7 +31,7 @@ public class SimpleBlock extends Tag {
     /**
      * Constructor
      *
-     * @see Tag#Tag(String, VINT)
+     * @see Tag#Tag(String, VariableInteger)
      *
      * @param name
      *            - the name of tag to be created
@@ -40,14 +40,14 @@ public class SimpleBlock extends Tag {
      * @throws IOException
      *             - in case of IO error
      */
-    public SimpleBlock(String name, VINT id) throws IOException {
+    public SimpleBlock(String name, VariableInteger id) throws IOException {
         super(name, id);
     }
 
     /**
      * Constructor
      *
-     * @see Tag#Tag(String, VINT, VINT, InputStream)
+     * @see Tag#Tag(String, VariableInteger, VariableInteger, InputStream)
      *
      * @param name
      *            - the name of tag to be created
@@ -60,7 +60,7 @@ public class SimpleBlock extends Tag {
      * @throws IOException
      *             - in case of IO error
      */
-    public SimpleBlock(String name, VINT id, VINT size, InputStream inputStream) throws IOException {
+    public SimpleBlock(String name, VariableInteger id, VariableInteger size, InputStream inputStream) throws IOException {
         super(name, id, size, inputStream);
     }
 

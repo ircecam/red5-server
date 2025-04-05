@@ -7,11 +7,11 @@
  */
 package org.red5.io.matroska;
 
-import static org.red5.io.matroska.VINT.MASK_BYTE_1;
-import static org.red5.io.matroska.VINT.MASK_BYTE_2;
-import static org.red5.io.matroska.VINT.MASK_BYTE_3;
-import static org.red5.io.matroska.VINT.MASK_BYTE_4;
-import static org.red5.io.matroska.VINT.MASK_BYTE_8;
+import static org.red5.io.matroska.VariableInteger.MASK_BYTE_1;
+import static org.red5.io.matroska.VariableInteger.MASK_BYTE_2;
+import static org.red5.io.matroska.VariableInteger.MASK_BYTE_3;
+import static org.red5.io.matroska.VariableInteger.MASK_BYTE_4;
+import static org.red5.io.matroska.VariableInteger.MASK_BYTE_8;
 
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
@@ -152,7 +152,7 @@ public class ParserUtils {
     }
 
     /**
-     * method to parse {@link VINT}
+     * method to parse {@link VariableInteger}
      *
      * @param inputStream
      *            - stream to get value
@@ -160,7 +160,7 @@ public class ParserUtils {
      * @throws IOException
      *             - in case of IO error
      */
-    public static VINT readVINT(InputStream inputStream) throws IOException {
+    public static VariableInteger readVINT(InputStream inputStream) throws IOException {
         byte[] vint;
         int fb = inputStream.read();
         int read = 0;
@@ -200,13 +200,13 @@ public class ParserUtils {
                 binaryV <<= BIT_IN_BYTE;
             }
         }
-        return new VINT(binaryV, (byte) (read + 1), mask & binaryV);
+        return new VariableInteger(binaryV, (byte) (read + 1), mask & binaryV);
     }
 
     /**
      * parsing tag by matroska specification <a href="http://matroska.org/technical/specs/index.html">matroska spec</a>
      *
-     * tag = VINT id, VINT size, data
+     * tag = VariableInteger id, VariableInteger size, data
      *
      * @param inputStream
      *            - stream to get value
@@ -217,8 +217,8 @@ public class ParserUtils {
      *             - in case of any conversion exception
      */
     public static Tag parseTag(InputStream inputStream) throws IOException, ConverterException {
-        VINT id = readVINT(inputStream);
-        VINT size = readVINT(inputStream);
+        VariableInteger id = readVINT(inputStream);
+        VariableInteger size = readVINT(inputStream);
 
         return TagFactory.createTag(id, size, inputStream);
     }

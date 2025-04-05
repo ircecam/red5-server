@@ -14,7 +14,7 @@ import java.util.BitSet;
 /**
  * Variable size integer class <a href="http://matroska.org/technical/specs/rfc/index.html">EBML RFC</a>
  */
-public class VINT {
+public class VariableInteger {
 
     public static final long MASK_BYTE_8 = 0b0000000011111111111111111111111111111111111111111111111111111111L;
 
@@ -36,13 +36,13 @@ public class VINT {
      * Constructor
      *
      * @param binary
-     *            - binary value of this {@link VINT}, calculated from value if not specified
+     *            - binary value of this {@link VariableInteger}, calculated from value if not specified
      * @param length
-     *            - length of this {@link VINT}
+     *            - length of this {@link VariableInteger}
      * @param value
-     *            - value of this {@link VINT}
+     *            - value of this {@link VariableInteger}
      */
-    public VINT(long binary, byte length, long value) {
+    public VariableInteger(long binary, byte length, long value) {
         if (binary == 0L) {
             BitSet bs = BitSet.valueOf(new long[] { value });
             bs.set(length * BIT_IN_BYTE - length);
@@ -82,16 +82,16 @@ public class VINT {
     }
 
     /**
-     * method to encode {@link VINT} as sequence of bytes
+     * method to encode {@link VariableInteger} as sequence of bytes
      *
-     * @return - encoded {@link VINT}
+     * @return - encoded {@link VariableInteger}
      */
     public byte[] encode() {
         return ParserUtils.getBytes(binary, length);
     }
 
     /**
-     * method to get "pretty" represented {@link VINT}
+     * method to get "pretty" represented {@link VariableInteger}
      */
     @Override
     public String toString() {
@@ -99,13 +99,13 @@ public class VINT {
     }
 
     /**
-     * method to construct {@link VINT} based on its binary representation
+     * method to construct {@link VariableInteger} based on its binary representation
      *
      * @param binary
-     *            - binary value of {@link VINT}
-     * @return {@link VINT} corresponding to this binary
+     *            - binary value of {@link VariableInteger}
+     * @return {@link VariableInteger} corresponding to this binary
      */
-    public static VINT fromBinary(long binary) {
+    public static VariableInteger fromBinary(long binary) {
         BitSet bs = BitSet.valueOf(new long[] { binary });
         long mask = MASK_BYTE_1;
         byte length = 1;
@@ -120,17 +120,17 @@ public class VINT {
             length = 2;
         }
         long value = binary & mask;
-        return new VINT(binary, length, value);
+        return new VariableInteger(binary, length, value);
     }
 
     /**
-     * method to construct {@link VINT} based on its value
+     * method to construct {@link VariableInteger} based on its value
      *
      * @param value
-     *            - value of {@link VINT}
-     * @return {@link VINT} corresponding to this value
+     *            - value of {@link VariableInteger}
+     * @return {@link VariableInteger} corresponding to this value
      */
-    public static VINT fromValue(long value) {
+    public static VariableInteger fromValue(long value) {
         BitSet bs = BitSet.valueOf(new long[] { value });
         byte length = (byte) (1 + bs.length() / BIT_IN_BYTE);
         if (bs.length() == length * BIT_IN_BYTE) {
@@ -138,6 +138,6 @@ public class VINT {
         }
         bs.set(length * BIT_IN_BYTE - length);
         long binary = bs.toLongArray()[0];
-        return new VINT(binary, length, value);
+        return new VariableInteger(binary, length, value);
     }
 }

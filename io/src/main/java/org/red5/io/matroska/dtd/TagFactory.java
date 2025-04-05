@@ -13,7 +13,7 @@ import java.util.Map;
 import java.util.Properties;
 
 import org.red5.io.matroska.ConverterException;
-import org.red5.io.matroska.VINT;
+import org.red5.io.matroska.VariableInteger;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -50,12 +50,12 @@ public class TagFactory {
         }
     }
 
-    public static Tag createTag(VINT id, VINT size, InputStream inputStream) throws ConverterException {
+    public static Tag createTag(VariableInteger id, VariableInteger size, InputStream inputStream) throws ConverterException {
         Tag tag = null;
         NameTag nt = tagsById.get(id.getBinary());
         if (nt != null) {
             try {
-                tag = (Tag) nt.clazz.getConstructor(String.class, VINT.class, VINT.class, InputStream.class).newInstance(nt.name, id, size, inputStream);
+                tag = (Tag) nt.clazz.getConstructor(String.class, VariableInteger.class, VariableInteger.class, InputStream.class).newInstance(nt.name, id, size, inputStream);
             } catch (Exception e) {
                 log.error("Unexpected exception while creating tag", e);
             }
@@ -72,9 +72,9 @@ public class TagFactory {
         if (null == it) {
             throw new ConverterException("not supported matroska tag: " + tagName);
         }
-        VINT typeVint = VINT.fromBinary(it.id);
+        VariableInteger typeVariableInteger = VariableInteger.fromBinary(it.id);
         try {
-            Tag newTag = (Tag) it.clazz.getConstructor(String.class, VINT.class).newInstance(tagName, typeVint);
+            Tag newTag = (Tag) it.clazz.getConstructor(String.class, VariableInteger.class).newInstance(tagName, typeVariableInteger);
             return newTag;
         } catch (Exception e) {
             log.error("Can not find property", e);

@@ -14,7 +14,7 @@ import java.nio.ByteBuffer;
 
 import org.red5.io.matroska.ConverterException;
 import org.red5.io.matroska.ParserUtils;
-import org.red5.io.matroska.VINT;
+import org.red5.io.matroska.VariableInteger;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -27,14 +27,14 @@ public abstract class Tag {
 
     private String name;
 
-    VINT id;
+    VariableInteger id;
 
-    VINT size;
+    VariableInteger size;
 
     private byte[] data;
 
     /**
-     * Constructor, internally calls {@link Tag#Tag(String, VINT, VINT, InputStream)} to create tag with 0 size
+     * Constructor, internally calls {@link Tag#Tag(String, VariableInteger, VariableInteger, InputStream)} to create tag with 0 size
      *
      * @param name
      *            - the name of tag to be created
@@ -43,8 +43,8 @@ public abstract class Tag {
      * @throws IOException
      *             - in case of IO error
      */
-    public Tag(String name, VINT id) throws IOException {
-        this(name, id, new VINT(0L, (byte) 0, 0L), null);
+    public Tag(String name, VariableInteger id) throws IOException {
+        this(name, id, new VariableInteger(0L, (byte) 0, 0L), null);
     }
 
     /**
@@ -61,7 +61,7 @@ public abstract class Tag {
      * @throws IOException
      *             - in case of any IO errors
      */
-    public Tag(String name, VINT id, VINT size, InputStream inputStream) throws IOException {
+    public Tag(String name, VariableInteger id, VariableInteger size, InputStream inputStream) throws IOException {
         this.name = name;
         this.id = id;
         this.size = size;
@@ -129,7 +129,7 @@ public abstract class Tag {
     /**
      * getter for id
      *
-     * @return id of this {@link Tag} as binary value of correspondent {@link VINT}
+     * @return id of this {@link Tag} as binary value of correspondent {@link VariableInteger}
      */
     public long getId() {
         return id.getBinary();
@@ -138,7 +138,7 @@ public abstract class Tag {
     /**
      * getter for size
      *
-     * @return size of this {@link Tag} as value of correspondent {@link VINT}
+     * @return size of this {@link Tag} as value of correspondent {@link VariableInteger}
      */
     public long getSize() {
         return size.getValue();

@@ -6,7 +6,7 @@ import java.nio.ByteBuffer;
 import java.util.Date;
 
 import org.red5.io.matroska.ParserUtils;
-import org.red5.io.matroska.VINT;
+import org.red5.io.matroska.VariableInteger;
 
 /**
  * http://matroska.org/technical/specs/index.html Date - signed 8 octets integer in nanoseconds with 0 indicating the precise beginning of the millennium (at 2001-01-01T00:00:00,000000000 UTC)
@@ -22,7 +22,7 @@ public class DateTag extends UnsignedIntegerTag {
     /**
      * Constructor
      *
-     * @see Tag#Tag(String, VINT)
+     * @see Tag#Tag(String, VariableInteger)
      *
      * @param name
      *            - the name of tag to be created
@@ -31,14 +31,14 @@ public class DateTag extends UnsignedIntegerTag {
      * @throws IOException
      *             - in case of IO error
      */
-    public DateTag(String name, VINT id) throws IOException {
+    public DateTag(String name, VariableInteger id) throws IOException {
         super(name, id);
     }
 
     /**
      * Constructor
      *
-     * @see Tag#Tag(String, VINT, VINT, InputStream)
+     * @see Tag#Tag(String, VariableInteger, VariableInteger, InputStream)
      *
      * @param name
      *            - the name of tag to be created
@@ -51,7 +51,7 @@ public class DateTag extends UnsignedIntegerTag {
      * @throws IOException
      *             - in case of IO error
      */
-    public DateTag(String name, VINT id, VINT size, InputStream inputStream) throws IOException {
+    public DateTag(String name, VariableInteger id, VariableInteger size, InputStream inputStream) throws IOException {
         super(name, id, size, inputStream);
     }
 
