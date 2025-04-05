@@ -308,226 +308,110 @@ public final class ClassLoaderBuilder {
         return tempJarFile;
     }
 
+    // Java
     /**
      * Removes older versions of libraries from a given list based on their version numbers.
      *
-     * @param list
+     * @param list Collection of URLs to clean up
      */
-    private final static void scrubURLList(Collection<URL> list) {
-        String ALPHABET = "abcdefghijklmnopqrstuvwxyz";
-        Pattern punct = Pattern.compile("\\p{Punct}");
-        Set<URL> removalList = new HashSet<URL>(list.size());
-        String topName = null;
-        String checkName = null;
+    private static final void scrubURLList(Collection<URL> list) {
+        Set<URL> removalList = new HashSet<>();
         URL[] urls = list.toArray(new URL[0]);
-        // System.out.printf("Library list: (%s items)\n", urls.length);
-        // for (URL url : urls) {
-        // System.out.println(url);
-        // }
-        // System.out.println();
+
         for (URL top : urls) {
-            if (removalList.contains(top)) {
-                continue;
-            }
-            topName = parseUrl(top);
-            // empty name - this happens inside eclipse
-            if ("".equals(topName)) {
-                removalList.add(top);
-                continue;
-            }
-            // skip red5
-            if (topName.startsWith("red5")) {
-                continue;
-            }
-            // skip version-less libraries
-            if (topName.endsWith("-")) {
-                removalList.add(top);
-                continue;
-            }
-            // by default we will get rid of testing libraries
-            if (topName.startsWith("grobo") || topName.startsWith("junit") || topName.startsWith("ivy")) {
-                removalList.add(top);
-                continue;
-            }
-            // by default we will get rid of "javadoc" and "sources" jars
-            if (topName.contains("javadoc") || topName.contains("sources")) {
-                removalList.add(top);
-                continue;
-            }
-            int topFirstDash = topName.indexOf('-');
-            // if theres no dash then just grab the first 3 chars // FIXME: why
-            // just grab the first 3 characters?
-            String prefix = topName.substring(0, topFirstDash != -1 ? topFirstDash : 3);
-            int topSecondDash = topName.indexOf('-', topFirstDash + 1);
-            for (URL check : list) {
-                if (removalList.contains(check)) {
-                    continue;
-                }
-                checkName = parseUrl(check);
-                // if its the same lib just continue with the next
-                if (checkName.equals(topName)) {
-                    continue;
-                }
-                // if the last character is a dash then skip it
-                if (checkName.endsWith("-")) {
-                    continue;
-                }
-                // check starts with to see if we should do version check
-                if (!checkName.startsWith(prefix)) {
-                    continue;
-                }
-                // check for next dash
-                if (topSecondDash > 0) {
-                    if (checkName.length() <= topSecondDash) {
-                        continue;
-                    }
-                    // check for second dash in check lib at same position
-                    if (checkName.charAt(topSecondDash) != '-') {
-                        continue;
-                    }
-                    // split the names
-                    String[] topSubs = topName.split("-");
-                    String[] checkSubs = checkName.split("-");
-                    // check lib type "spring-aop" vs "spring-orm"
-                    if (!topSubs[1].equals(checkSubs[1])) {
-                        continue;
-                    }
-                    // see if next entry is a number
-                    if (!Character.isDigit(topSubs[2].charAt(0)) && !Character.isDigit(checkSubs[2].charAt(0))) {
-                        // check next lib name section for a match
-                        if (!topSubs[2].equals(checkSubs[2])) {
-                            continue;
-                        }
-                    }
-                }
-                // do the version check
+            if (shouldSkip(top, removalList)) continue;
+            String topName = parseUrl(top);
 
-                // read from end to get version info
-                // System.out.printf("Read from end to get version info: %s top 1st dash: %d top 2nd dash: %d\n",
-                // checkName, topFirstDash, topSecondDash);
-                if (checkName.length() < (topFirstDash + 1)) {
-                    continue;
-                }
-                String checkVers = checkName.substring(topSecondDash != -1 ? (topSecondDash + 1) : (topFirstDash + 1));
-                if (checkVers.startsWith("-")) {
-                    continue;
-                }
-
-                // get top libs version info
-                String topVers = topName.substring(topSecondDash != -1 ? (topSecondDash + 1) : (topFirstDash + 1));
-                int topThirdDash = -1;
-                String topThirdName = null;
-                if (topVers.length() > 0 && !Character.isDigit(topVers.charAt(0))) {
-                    // check if third level lib name matches
-                    topThirdDash = topVers.indexOf('-');
-                    // no version most likely exists
-                    if (topThirdDash == -1) {
-                        continue;
-                    }
-                    topThirdName = topVers.substring(0, topThirdDash);
-                    topVers = topVers.substring(topThirdDash + 1);
-                }
-
-                // if check version starts with a non-number skip it
-                int checkThirdDash = -1;
-                String checkThirdName = null;
-                if (!Character.isDigit(checkVers.charAt(0))) {
-                    // check if third level lib name matches
-                    checkThirdDash = checkVers.indexOf('-');
-                    // no version most likely exists
-                    if (checkThirdDash == -1) {
-                        continue;
-                    }
-                    checkThirdName = checkVers.substring(0, checkThirdDash);
-                    if (topThirdName == null || !topThirdName.equals(checkThirdName)) {
-                        continue;
-                    }
-                    checkVers = checkVers.substring(checkThirdDash + 1);
-                    // if not
-                    if (!Character.isDigit(checkVers.charAt(0))) {
-                        continue;
-                    }
-                }
-
-                if (topThirdName != null && checkThirdName == null) {
-                    continue;
-                }
-                // check major
-                String[] topVersion = punct.split(topVers);
-                // System.out.println("topVersion (" + topVers + "): " +
-                // topVersion[0] + " length: " + topVersion.length);
-                if (!topVersion[0].matches("[\\d].*")) {
-                    continue;
-                }
-
-                // check 3rd part of version for letters
-                if (topVersion.length > 2) {
-                    String v = topVersion[2].toLowerCase();
-                    if (v.length() > 1) {
-                        topVersion[2] = deleteAny(v, ALPHABET);
-                    }
-                    // after alpha removal, string is any digits or single char
-                    if (topVersion[2].length() == 1) {
-                        // if is a only a letter use its index as a version
-                        char ch = v.charAt(0);
-                        if (!Character.isDigit(ch)) {
-                            topVersion[2] = ALPHABET.indexOf(ch) + "";
-                        }
-                    }
-                }
-                // System.out.println("AOB " + checkVers + " | " + topVersion[0]
-                // + " length: " + topVersion.length);
-                int topVersionNumber;
-                try {
-                    topVersionNumber = topVersion.length == 1 ? Integer.valueOf(topVersion[0]) : Integer.valueOf(topVersion[0] + topVersion[1] + (topVersion.length > 2 ? topVersion[2] : '0')).intValue();
-                } catch (NumberFormatException nfe) {
-                    topVersionNumber = 0;
-                    System.err.println("Error parsing topVers:" + topVers);
-                }
-
-                String[] checkVersion = punct.split(checkVers);
-                // System.out.println("checkVersion (" + checkVers + "): " +
-                // checkVersion[0] + " length: " + checkVersion.length);
-
-                // check 3rd part of version for letters
-                if (checkVersion.length > 2) {
-                    String v = checkVersion[2].toLowerCase();
-                    if (v.length() > 1) {
-                        checkVersion[2] = deleteAny(v, ALPHABET);
-                    }
-                    // after alpha removal, string is any digits or single char
-                    if (checkVersion[2].length() == 1) {
-                        // if is a only a letter use its index as a version
-                        char ch = v.charAt(0);
-                        if (!Character.isDigit(ch)) {
-                            checkVersion[2] = ALPHABET.indexOf(ch) + "";
-                        }
-                    }
-                }
-                int checkVersionNumber;
-                try {
-                    checkVersionNumber = checkVersion.length == 1 ? Integer.valueOf(checkVersion[0]) : Integer.valueOf(checkVersion[0] + checkVersion[1] + (checkVersion.length > 2 ? checkVersion[2] : '0')).intValue();
-                } catch (NumberFormatException nfe) {
-                    checkVersionNumber = 0;
-                    System.err.println("Error parsing checkVers:" + checkVers);
-                }
-
-                // Check version numbers
-                if (topVersionNumber >= checkVersionNumber) {
-                    // remove it
+            for (URL check : urls) {
+                if (isRemovable(top, check, topName, removalList)) {
                     removalList.add(check);
-                } else {
-                    removalList.add(top);
-                    break;
                 }
             }
         }
-        // remove the old libs
-        // System.out.println("Removal list:");
-        // for (URL url : removalList) {
-        // System.out.println(url);
-        // }
         list.removeAll(removalList);
+    }
+
+    /**
+     * Checks if a URL should be skipped based on specific criteria.
+     *
+     * @param url         URL to check.
+     * @param removalList Set of URLs already marked for removal.
+     * @return True if the URL should be skipped, false otherwise.
+     */
+    private static boolean shouldSkip(URL url, Set<URL> removalList) {
+        String name = parseUrl(url);
+        return removalList.contains(url) || name.isEmpty() || name.startsWith("red5") ||
+                name.startsWith("grobo") || name.startsWith("junit") || name.startsWith("ivy") ||
+                name.contains("javadoc") || name.contains("sources") || name.endsWith("-");
+    }
+
+    /**
+     * Determines if an element can be removed based on version comparison.
+     *
+     * @param top         URL of the primary element.
+     * @param check       URL of the secondary element.
+     * @param topName     Name of the primary element.
+     * @param removalList Set of URLs already marked for removal.
+     * @return True if the element can be removed, false otherwise.
+     */
+    private static boolean isRemovable(URL top, URL check, String topName, Set<URL> removalList) {
+        if (removalList.contains(check)) return false;
+
+        String checkName = parseUrl(check);
+        if (checkName.equals(topName) || checkName.endsWith("-") || !isSameLibraryFamily(topName, checkName)) {
+            return false;
+        }
+
+        int topVersion = extractVersion(topName);
+        int checkVersion = extractVersion(checkName);
+
+        if (topVersion >= checkVersion) {
+            removalList.add(check);
+        } else {
+            removalList.add(top);
+        }
+        return true;
+    }
+
+    /**
+     * Checks if two libraries belong to the same family.
+     *
+     * @param topName   Name of the primary library.
+     * @param checkName Name of the secondary library.
+     * @return True if both libraries belong to the same family, false otherwise.
+     */
+    private static boolean isSameLibraryFamily(String topName, String checkName) {
+        String topPrefix = getPrefix(topName);
+        String checkPrefix = getPrefix(checkName);
+
+        return topPrefix.equals(checkPrefix);
+    }
+
+    /**
+     * Extracts the prefix from the name of a library.
+     *
+     * @param name Library name.
+     * @return Prefix extracted from the library name.
+     */
+    private static String getPrefix(String name) {
+        int dashIndex = name.indexOf('-');
+        return name.substring(0, dashIndex != -1 ? dashIndex : 3);
+    }
+
+    /**
+     * Extracts the version from a library name by removing non-numeric characters.
+     *
+     * @param name Library name.
+     * @return Extracted version number as an integer.
+     */
+    private static int extractVersion(String name) {
+        Pattern punct = Pattern.compile("\\p{Punct}");
+        try {
+            String[] versionParts = punct.split(name);
+            return Integer.parseInt(versionParts[0]);
+        } catch (NumberFormatException e) {
+            return 0;
+        }
     }
 
     /**
