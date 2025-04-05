@@ -923,12 +923,12 @@ public abstract class RTMPConnection extends BaseConnection implements IStreamCa
     }
 
     /**
-     * Creates output stream object from stream id. Output stream consists of audio, video, and data channels.
+     * Creates output stream object from stream id. AMF3OutputWriter stream consists of audio, video, and data channels.
      *
      * @see org.red5.server.stream.OutputStream
      * @param streamId
      *            Stream id
-     * @return Output stream object
+     * @return AMF3OutputWriter stream object
      */
     public OutputStream createOutputStream(Number streamId) {
         int channelId = getChannelIdForStreamId(streamId);
@@ -939,7 +939,7 @@ public abstract class RTMPConnection extends BaseConnection implements IStreamCa
         final Channel video = getChannel(channelId++);
         final Channel audio = getChannel(channelId++);
         if (isTrace) {
-            log.trace("Output stream - data: {} video: {} audio: {}", data, video, audio);
+            log.trace("AMF3OutputWriter stream - data: {} video: {} audio: {}", data, video, audio);
         }
         return new OutputStream(video, audio, data);
     }

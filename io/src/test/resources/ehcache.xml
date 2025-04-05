@@ -18,7 +18,7 @@
         timeToIdleSeconds="120"
         timeToLiveSeconds="120" />
     <!--
-         org.red5.io.amf.Output.stringCache
+         org.red5.io.amf.AMF3OutputWriter.stringCache
             Caches strings for output via ActionMessageFormat serialization. Keeps up to 1000 elements in memory,
             does not overflow to disk, is not eternal, and expires elements after 20 minutes of inactivity.
     -->

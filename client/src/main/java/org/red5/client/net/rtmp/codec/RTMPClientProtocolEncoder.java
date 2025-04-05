@@ -1,6 +1,7 @@
 package org.red5.client.net.rtmp.codec;
 
 import org.apache.mina.core.buffer.IoBuffer;
+import org.red5.io.amf3.AMF3OutputWriter;
 import org.red5.io.object.Output;
 import org.red5.io.object.Serializer;
 import org.red5.server.api.Red5;
@@ -48,7 +49,7 @@ public class RTMPClientProtocolEncoder extends RTMPProtocolEncoder {
             log.debug("This is a pending call, send request");
             // for request we need to use AMF3 for client mode if the connection is AMF3
             if (conn.getEncoding() == Encoding.AMF3) {
-                output = new org.red5.io.amf3.Output(out);
+                output = new AMF3OutputWriter(out);
             }
             final String action = (call.getServiceName() == null) ? call.getServiceMethodName() : call.getServiceName() + '.' + call.getServiceMethodName();
             Serializer.serialize(output, action);
@@ -62,7 +63,7 @@ public class RTMPClientProtocolEncoder extends RTMPProtocolEncoder {
             output = new org.red5.io.amf.Output(out);
         } else {
             if (conn.getEncoding() == Encoding.AMF3) {
-                output = new org.red5.io.amf3.Output(out);
+                output = new AMF3OutputWriter(out);
             } else {
                 output = new org.red5.io.amf.Output(out);
             }

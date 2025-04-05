@@ -12,7 +12,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * Output stream that consists of audio, video and data channels
+ * AMF3OutputWriter stream that consists of audio, video and data channels
  *
  * @see org.red5.server.net.rtmp.Channel
  */

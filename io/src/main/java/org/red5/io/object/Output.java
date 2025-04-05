@@ -16,7 +16,7 @@ import org.red5.io.amf3.ByteArray;
 import org.w3c.dom.Document;
 
 /**
- * Output interface which defines contract methods to be implemented
+ * AMF3OutputWriter interface which defines contract methods to be implemented
  *
  * @author The Red5 Project
  * @author Luke Hubbard, Codegent Ltd (luke@codegent.com)

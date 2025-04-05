@@ -986,8 +986,8 @@ public class RTMPProtocolDecoder implements Constants, IEventDecoder {
                 }
                 // need to debug this further
                 /*
-                 * IoBuffer buf = IoBuffer.allocate(64); buf.setAutoExpand(true); Output out = null; if (encoding == Encoding.AMF3) { out = new org.red5.io.amf3.Output(buf); } else { out = new
-                 * Output(buf); } out.writeString(action); out.writeMap(params); buf.flip(); // instance a notify with action ret = new Notify(buf, action);
+                 * IoBuffer buf = IoBuffer.allocate(64); buf.setAutoExpand(true); AMF3OutputWriter out = null; if (encoding == Encoding.AMF3) { out = new org.red5.io.amf3.AMF3OutputWriter(buf); } else { out = new
+                 * AMF3OutputWriter(buf); } out.writeString(action); out.writeMap(params); buf.flip(); // instance a notify with action ret = new Notify(buf, action);
                  */
                 // go back to the beginning
                 in.reset();

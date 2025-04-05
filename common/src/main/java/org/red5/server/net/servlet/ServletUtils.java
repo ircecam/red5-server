@@ -92,7 +92,7 @@ public class ServletUtils {
      * @param req
      *            Request
      * @param output
-     *            Output stream
+     *            AMF3OutputWriter stream
      * @throws java.io.IOException
      *             on error
      */

@@ -26,7 +26,7 @@ import org.red5.io.object.Serializer;
 public class DataOutput implements IDataOutput {
 
     /** The output stream */
-    private Output output;
+    private AMF3OutputWriter output;
 
     /** Raw data of output destination */
     private IoBuffer buffer;
@@ -37,7 +37,7 @@ public class DataOutput implements IDataOutput {
      * @param output
      *            destination to write to
      */
-    protected DataOutput(Output output) {
+    protected DataOutput(AMF3OutputWriter output) {
         this.output = output;
         buffer = output.getBuffer();
     }

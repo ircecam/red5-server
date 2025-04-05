@@ -67,7 +67,7 @@ public class ByteArray implements IDataInput, IDataOutput {
         Input input = new Input(data);
         input.enforceAMF3();
         dataInput = new DataInput(input);
-        Output output = new Output(data);
+        AMF3OutputWriter output = new AMF3OutputWriter(data);
         output.enforceAMF3();
         dataOutput = new DataOutput(output);
     }

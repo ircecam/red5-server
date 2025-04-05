@@ -12,7 +12,7 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * Output Endpoint for a provider to connect.
+ * AMF3OutputWriter Endpoint for a provider to connect.
  *
  * @author The Red5 Project
  * @author Steven Gong (steven.gong@gmail.com)

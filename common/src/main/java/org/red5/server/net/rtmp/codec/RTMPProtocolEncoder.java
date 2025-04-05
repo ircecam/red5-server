@@ -12,6 +12,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import org.apache.mina.core.buffer.IoBuffer;
+import org.red5.io.amf3.AMF3OutputWriter;
 import org.red5.io.object.Output;
 import org.red5.io.object.Serializer;
 import org.red5.server.api.IConnection.Encoding;
@@ -644,7 +645,7 @@ public class RTMPProtocolEncoder implements Constants, IEventEncoder {
     private void doEncodeSharedObject(ISharedObjectMessage so, IoBuffer out) {
         final Encoding encoding = Red5.getConnectionLocal().getEncoding();
         final Output output = new org.red5.io.amf.Output(out);
-        final Output amf3output = new org.red5.io.amf3.Output(out);
+        final Output amf3output = new AMF3OutputWriter(out);
         output.putString(so.getName());
         // SO version
         out.putInt(so.getVersion());
@@ -823,7 +824,7 @@ public class RTMPProtocolEncoder implements Constants, IEventEncoder {
             output = new org.red5.io.amf.Output(out);
         } else {
             if (Red5.getConnectionLocal().getEncoding() == Encoding.AMF3) {
-                output = new org.red5.io.amf3.Output(out);
+                output = new AMF3OutputWriter(out);
             } else {
                 output = new org.red5.io.amf.Output(out);
             }

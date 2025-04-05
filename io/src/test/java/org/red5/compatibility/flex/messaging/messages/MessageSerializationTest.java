@@ -8,9 +8,9 @@ import java.io.ByteArrayOutputStream;
 import org.apache.mina.core.buffer.IoBuffer;
 import org.junit.Assert;
 import org.junit.Test;
+import org.red5.io.amf3.AMF3OutputWriter;
 import org.red5.io.amf3.ByteArray;
 import org.red5.io.amf3.Input;
-import org.red5.io.amf3.Output;
 import org.red5.io.object.Deserializer;
 import org.red5.io.object.Serializer;
 import org.red5.io.utils.RandomGUID;
@@ -143,7 +143,7 @@ public class MessageSerializationTest {
         IoBuffer data = IoBuffer.allocate(0);
         data.setAutoExpand(true);
 
-        Output output = new Output(data);
+        AMF3OutputWriter output = new AMF3OutputWriter(data);
         output.enforceAMF3();
         Serializer.serialize(output, obj);
 

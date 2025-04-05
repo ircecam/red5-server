@@ -44,9 +44,9 @@ import org.w3c.dom.Document;
  * @author Joachim Bauch (jojo@struktur.de)
  * @author Harald Radi (harald.radi@nme.at)
  */
-public class Output extends org.red5.io.amf.Output {
+public class AMF3OutputWriter extends org.red5.io.amf.Output {
 
-    protected static Logger log = LoggerFactory.getLogger(Output.class);
+    protected static Logger log = LoggerFactory.getLogger(AMF3OutputWriter.class);
 
     /**
      * Set to a value above 0 to disable writing of the AMF3 object tag.
@@ -65,7 +65,7 @@ public class Output extends org.red5.io.amf.Output {
      *            instance of IoBuffer
      * @see IoBuffer
      */
-    public Output(IoBuffer buf) {
+    public AMF3OutputWriter(IoBuffer buf) {
         super(buf);
         amf3_mode = 0;
         stringReferences = new ConcurrentHashMap<String, Integer>(8, 0.9f, 2);

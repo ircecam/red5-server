@@ -21,6 +21,7 @@ import java.util.Vector;
 import org.apache.commons.beanutils.BeanMap;
 import org.red5.annotations.DontSerialize;
 import org.red5.annotations.RemoteClass;
+import org.red5.io.amf3.AMF3OutputWriter;
 import org.red5.io.amf3.ByteArray;
 import org.red5.io.amf3.IExternalizable;
 import org.red5.io.utils.ObjectMap;
@@ -47,7 +48,7 @@ public class Serializer {
      * Serializes output to a core data type object
      *
      * @param out
-     *            Output writer
+     *            AMF3OutputWriter writer
      * @param obj
      *            Object to serialize
      */
@@ -59,7 +60,7 @@ public class Serializer {
      * Serializes output to a core data type object
      *
      * @param out
-     *            Output writer
+     *            AMF3OutputWriter writer
      * @param field
      *            The field to serialize
      * @param getter
@@ -124,7 +125,7 @@ public class Serializer {
                 // look at the type counts
                 if (nans > 0) {
                     // if we have non-number types, use object
-                    ((org.red5.io.amf3.Output) out).enforceAMF3();
+                    ((AMF3OutputWriter) out).enforceAMF3();
                     out.writeVectorObject((Vector<Object>) obj);
                 } else if (dubs == 0 && longs == 0) {
                     // no doubles or longs
@@ -134,7 +135,7 @@ public class Serializer {
                     out.writeVectorUInt((Vector<Long>) obj);
                 } else {
                     // handle any other types of numbers
-                    ((org.red5.io.amf3.Output) out).enforceAMF3();
+                    ((AMF3OutputWriter) out).enforceAMF3();
                     out.writeVectorNumber((Vector<Double>) obj);
                 }
             } else if (obj instanceof Iterator) {
@@ -151,7 +152,7 @@ public class Serializer {
      * Writes a primitive out as an object
      *
      * @param out
-     *            Output writer
+     *            AMF3OutputWriter writer
      * @param basic
      *            Primitive
      * @return boolean true if object was successfully serialized, false otherwise
@@ -180,7 +181,7 @@ public class Serializer {
      * Writes Lists out as a data type
      *
      * @param out
-     *            Output write
+     *            AMF3OutputWriter write
      * @param listType
      *            List type
      * @return boolean true if object was successfully serialized, false otherwise
@@ -199,7 +200,7 @@ public class Serializer {
      * Writes a List out as an Object
      *
      * @param out
-     *            Output writer
+     *            AMF3OutputWriter writer
      * @param list
      *            List to write as Object
      */
@@ -233,7 +234,7 @@ public class Serializer {
      * Writes array (or collection) out as output Arrays, Collections, etc
      *
      * @param out
-     *            Output object
+     *            AMF3OutputWriter object
      * @param arrType
      *            Array or collection type
      * @return true if the object has been written, otherwise false
@@ -259,7 +260,7 @@ public class Serializer {
      * Writes an iterator out to the output
      *
      * @param out
-     *            Output writer
+     *            AMF3OutputWriter writer
      * @param it
      *            Iterator to write
      */
@@ -278,7 +279,7 @@ public class Serializer {
      * Writes an xml type out to the output
      *
      * @param out
-     *            Output writer
+     *            AMF3OutputWriter writer
      * @param xml
      *            XML
      * @return boolean true if object was successfully written, false otherwise
@@ -298,7 +299,7 @@ public class Serializer {
      * Writes a document to the output
      *
      * @param out
-     *            Output writer
+     *            AMF3OutputWriter writer
      * @param doc
      *            Document to write
      */
@@ -310,7 +311,7 @@ public class Serializer {
      * Write typed object to the output
      *
      * @param out
-     *            Output writer
+     *            AMF3OutputWriter writer
      * @param obj
      *            Object type to write
      * @return true if the object has been written, otherwise false

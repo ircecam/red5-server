@@ -134,7 +134,7 @@ public class ClientBroadcastStream extends AbstractClientStream implements IClie
     protected AtomicBoolean closed = new AtomicBoolean(false);
 
     /**
-     * Output endpoint that providers use
+     * AMF3OutputWriter endpoint that providers use
      */
     protected transient IMessageOutput connMsgOut;
 

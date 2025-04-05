@@ -41,7 +41,7 @@ public class IOUtils {
      * Writes medium integer
      *
      * @param out
-     *            Output buffer
+     *            AMF3OutputWriter buffer
      * @param value
      *            Integer to write
      */
@@ -57,7 +57,7 @@ public class IOUtils {
      * Writes medium integer
      *
      * @param out
-     *            Output buffer
+     *            AMF3OutputWriter buffer
      * @param value
      *            Integer to write
      */
@@ -71,7 +71,7 @@ public class IOUtils {
      * Writes extended medium integer (equivalent to a regular integer whose most significant byte has been moved to its end, past its least significant byte)
      *
      * @param out
-     *            Output buffer
+     *            AMF3OutputWriter buffer
      * @param value
      *            Integer to write
      */
@@ -84,7 +84,7 @@ public class IOUtils {
      * Writes extended medium integer (equivalent to a regular integer whose most significant byte has been moved to its end, past its least significant byte)
      *
      * @param out
-     *            Output buffer
+     *            AMF3OutputWriter buffer
      * @param value
      *            Integer to write
      */
@@ -97,7 +97,7 @@ public class IOUtils {
      * Writes an unsigned byte value to the supplied buffer.
      *
      * @param out
-     *            Output buffer
+     *            AMF3OutputWriter buffer
      * @param value
      *            Byte to write
      */

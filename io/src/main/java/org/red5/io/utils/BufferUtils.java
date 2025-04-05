@@ -79,7 +79,7 @@ public class BufferUtils {
      * Puts an input buffer in an output buffer and returns number of bytes written.
      *
      * @param out
-     *            Output buffer
+     *            AMF3OutputWriter buffer
      * @param in
      *            Input buffer
      * @param numBytesMax
@@ -112,7 +112,7 @@ public class BufferUtils {
      *            Input byte array
      * @param numBytesMax
      *            Number of bytes max
-     * @return out Output byte array
+     * @return out AMF3OutputWriter byte array
      */
     public final static byte[] consumeBytes(byte[] in, int numBytesMax) {
         int limit = Math.min(in.length, numBytesMax);

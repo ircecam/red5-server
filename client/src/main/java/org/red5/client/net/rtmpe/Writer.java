@@ -47,7 +47,7 @@ public class Writer implements IClientListener {
             file.createNewFile();
             writer = new FLVWriter(file, false);
         } catch (IOException e) {
-            log.error("Output file for the writer creation failed", e);
+            log.error("AMF3OutputWriter file for the writer creation failed", e);
         }
     }
 
@@ -62,7 +62,7 @@ public class Writer implements IClientListener {
             file.createNewFile();
             writer = new FLVWriter(file, false);
         } catch (IOException e) {
-            log.error("Output file for the writer creation failed", e);
+            log.error("AMF3OutputWriter file for the writer creation failed", e);
         }
     }
 

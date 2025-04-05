@@ -163,7 +163,7 @@ public class PersistableAttributeStore extends AttributeStore implements IPersis
      * Serializes byte buffer output, storing them to attributes
      *
      * @param output
-     *            Output object
+     *            AMF3OutputWriter object
      * @throws IOException
      *             if error
      */

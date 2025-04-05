@@ -1384,7 +1384,7 @@ public final class PlayEngine implements IFilter, IPushableConsumer, IPipeConnec
                     out.sendOOBControlMessage((IProvider) source, oobCtrlMsg);
                 } else {
                     // this may occur when a client attempts to play and then disconnects
-                    log.warn("Output is not available, message cannot be sent");
+                    log.warn("AMF3OutputWriter is not available, message cannot be sent");
                     close();
                 }
             }

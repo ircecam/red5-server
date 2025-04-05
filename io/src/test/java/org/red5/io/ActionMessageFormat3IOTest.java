@@ -16,9 +16,9 @@ import java.util.Vector;
 
 import org.apache.mina.core.buffer.IoBuffer;
 import org.junit.Test;
+import org.red5.io.amf3.AMF3OutputWriter;
 import org.red5.io.amf3.ByteArray;
 import org.red5.io.amf3.Input;
-import org.red5.io.amf3.Output;
 import org.red5.io.object.DataTypes;
 import org.red5.io.object.Deserializer;
 import org.red5.io.object.Serializer;
@@ -60,7 +60,7 @@ public class ActionMessageFormat3IOTest extends AbstractIOTest {
         buf.setAutoExpand(true);
         buf.setAutoShrink(true);
         in = new Input(buf);
-        out = new Output(buf);
+        out = new AMF3OutputWriter(buf);
     }
 
     @SuppressWarnings("unchecked")

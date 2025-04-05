@@ -144,7 +144,7 @@ public interface IPersistable {
      * Write the object to the passed output stream.
      *
      * @param output
-     *            Output stream to write to
+     *            AMF3OutputWriter stream to write to
      * @throws java.io.IOException
      *             Any I/O exception
      */

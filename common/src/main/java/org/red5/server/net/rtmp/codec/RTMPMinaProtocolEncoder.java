@@ -146,7 +146,7 @@ public class RTMPMinaProtocolEncoder extends ProtocolEncoderAdapter {
     }
 
     /**
-     * Output data chunker.
+     * AMF3OutputWriter data chunker.
      */
     private static final class Chunker {
 

@@ -23,8 +23,8 @@ import org.red5.compatibility.flex.messaging.messages.AsyncMessageExt;
 import org.red5.compatibility.flex.messaging.messages.CommandMessage;
 import org.red5.compatibility.flex.messaging.messages.Constants;
 import org.red5.compatibility.flex.messaging.messages.Message;
+import org.red5.io.amf3.AMF3OutputWriter;
 import org.red5.io.amf3.Input;
-import org.red5.io.amf3.Output;
 import org.red5.io.object.Deserializer;
 import org.red5.io.object.RecordSet;
 import org.red5.io.object.Serializer;
@@ -95,12 +95,12 @@ public class DSRemotingClient extends RemotingClient {
         Collection<RemotingHeader> hdr = headers.values();
         result.putShort((short) hdr.size());
         for (RemotingHeader header : hdr) {
-            Output.putString(result, header.getName());
+            AMF3OutputWriter.putString(result, header.getName());
             result.put(header.getMustUnderstand() ? (byte) 0x01 : (byte) 0x00);
 
             IoBuffer tmp = IoBuffer.allocate(1024);
             tmp.setAutoExpand(true);
-            Output tmpOut = new Output(tmp);
+            AMF3OutputWriter tmpOut = new AMF3OutputWriter(tmp);
             Serializer.serialize(tmpOut, header.getValue());
             tmp.flip();
             // Size of header data
@@ -113,15 +113,15 @@ public class DSRemotingClient extends RemotingClient {
         // One body
         result.putShort((short) 1);
         // Method name
-        Output.putString(result, method);
+        AMF3OutputWriter.putString(result, method);
         // Client callback for response
-        //Output.putString(result, "");
+        //AMF3OutputWriter.putString(result, "");
         //responseURI
-        Output.putString(result, "/" + sequenceCounter++);
+        AMF3OutputWriter.putString(result, "/" + sequenceCounter++);
         // Serialize parameters
         IoBuffer tmp = IoBuffer.allocate(1024);
         tmp.setAutoExpand(true);
-        Output tmpOut = new Output(tmp);
+        AMF3OutputWriter tmpOut = new AMF3OutputWriter(tmp);
         //if the params are null send the NULL ActionMessageFormat type
         //this should fix APPSERVER-296
         if (params == null) {

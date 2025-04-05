@@ -77,15 +77,15 @@ public class Output extends BaseOutput implements org.red5.io.object.Output {
 
     private static CacheManager constructDefault() {
         CacheManager manager = CacheManager.getInstance();
-        manager.addCacheIfAbsent("org.red5.io.amf.Output.stringCache");
-        manager.addCacheIfAbsent("org.red5.io.amf.Output.getterCache");
-        manager.addCacheIfAbsent("org.red5.io.amf.Output.fieldCache");
-        manager.addCacheIfAbsent("org.red5.io.amf.Output.serializeCache");
+        manager.addCacheIfAbsent("org.red5.io.amf.AMF3OutputWriter.stringCache");
+        manager.addCacheIfAbsent("org.red5.io.amf.AMF3OutputWriter.getterCache");
+        manager.addCacheIfAbsent("org.red5.io.amf.AMF3OutputWriter.fieldCache");
+        manager.addCacheIfAbsent("org.red5.io.amf.AMF3OutputWriter.serializeCache");
         return manager;
     }
 
     /**
-     * Output buffer
+     * AMF3OutputWriter buffer
      */
     protected IoBuffer buf;
 
@@ -573,9 +573,9 @@ public class Output extends BaseOutput implements org.red5.io.object.Output {
     }
 
     /**
-     * Return buffer of this Output object
+     * Return buffer of this AMF3OutputWriter object
      *
-     * @return Byte buffer of this Output object
+     * @return Byte buffer of this AMF3OutputWriter object
      */
     public IoBuffer buf() {
         return this.buf;
@@ -587,28 +587,28 @@ public class Output extends BaseOutput implements org.red5.io.object.Output {
 
     protected static Cache getStringCache() {
         if (stringCache == null) {
-            stringCache = getCacheManager().getCache("org.red5.io.amf.Output.stringCache");
+            stringCache = getCacheManager().getCache("org.red5.io.amf.AMF3OutputWriter.stringCache");
         }
         return stringCache;
     }
 
     protected static Cache getSerializeCache() {
         if (serializeCache == null) {
-            serializeCache = getCacheManager().getCache("org.red5.io.amf.Output.serializeCache");
+            serializeCache = getCacheManager().getCache("org.red5.io.amf.AMF3OutputWriter.serializeCache");
         }
         return serializeCache;
     }
 
     protected static Cache getFieldCache() {
         if (fieldCache == null) {
-            fieldCache = getCacheManager().getCache("org.red5.io.amf.Output.fieldCache");
+            fieldCache = getCacheManager().getCache("org.red5.io.amf.AMF3OutputWriter.fieldCache");
         }
         return fieldCache;
     }
 
     protected static Cache getGetterCache() {
         if (getterCache == null) {
-            getterCache = getCacheManager().getCache("org.red5.io.amf.Output.getterCache");
+            getterCache = getCacheManager().getCache("org.red5.io.amf.AMF3OutputWriter.getterCache");
         }
         return getterCache;
     }
