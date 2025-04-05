@@ -44,10 +44,8 @@ public class DSRemotingClient extends RemotingClient {
 
     protected static Logger log = LoggerFactory.getLogger(DSRemotingClient.class);
 
-    /** The datasource id (assigned by the server). DsId */
     private String dataSourceId = "nil";
 
-    /** The request sequence number */
     private int sequenceCounter = 1;
 
     /**
@@ -59,9 +57,7 @@ public class DSRemotingClient extends RemotingClient {
 
     /**
      * Create new remoting client for the given url.
-     *
-     * @param url
-     *            URL to connect to
+     * @param url URL to connect to
      */
     public DSRemotingClient(String url) {
         super(url, DEFAULT_TIMEOUT);
@@ -77,12 +73,154 @@ public class DSRemotingClient extends RemotingClient {
     }
 
     /**
+     * Invoke a method synchronously on the remoting server.
+     *
+     * @param method Method name
+     * @param params Parameters passed to method
+     * @return the result of the method call
+     */
+    @SuppressWarnings("null")
+    @Override
+    public Object invokeMethod(String method, Object[] params) {
+        log.debug("invokeMethod url: {}", (url + appendToUrl));
+        IoBuffer resultBuffer = null;
+        IoBuffer data = encodeInvoke(method, params);
+        //setup POST
+        HttpPost post = null;
+        try {
+            post = new HttpPost(url + appendToUrl);
+            post.addHeader("Content-Type", CONTENT_TYPE);
+            post.setEntity(new InputStreamEntity(data.asInputStream(), data.limit()));
+            // execute the method
+            HttpResponse response = client.execute(post);
+            int code = response.getStatusLine().getStatusCode();
+            log.debug("HTTP response code: {}", code);
+            if (code / 100 != 2) {
+                throw new RuntimeException("Didn't receive success from remoting server");
+            } else {
+                HttpEntity entity = response.getEntity();
+                if (entity != null) {
+                    //fix for Trac #676
+                    int contentLength = (int) entity.getContentLength();
+                    //default the content length to 16 if post doesn't contain a good value
+                    if (contentLength < 1) {
+                        contentLength = 16;
+                    }
+                    // get the response as bytes
+                    byte[] bytes = EntityUtils.toByteArray(entity);
+                    resultBuffer = IoBuffer.wrap(bytes);
+                    resultBuffer.flip();
+                    Object result = decodeResult(resultBuffer);
+                    if (result instanceof RecordSet) {
+                        // Make sure we can retrieve paged results
+                        ((RecordSet) result).setRemotingClient(this);
+                    }
+                    return result;
+                }
+            }
+        } catch (Exception ex) {
+            log.error("Error while invoking remoting method.", ex);
+            post.abort();
+        } finally {
+            if (resultBuffer != null) {
+                resultBuffer.free();
+                resultBuffer = null;
+            }
+            data.free();
+            data = null;
+        }
+        return null;
+    }
+
+    @SuppressWarnings("rawtypes")
+    public static void main(String[] args) {
+        //blazeds my-polling-amf http://localhost:8400/meta/messagebroker/amfpolling
+        DSRemotingClient client = new DSRemotingClient("http://localhost:8400/meta/messagebroker/amfpolling");
+        try {
+            //send ping
+            CommandMessage msg = new CommandMessage();
+            msg.setCorrelationId("");
+            msg.setDestination("");
+            //create / set headers
+            ObjectMap<String, Object> headerMap = new ObjectMap<String, Object>();
+            headerMap.put(Message.FLEX_CLIENT_ID_HEADER, "nil");
+            headerMap.put(Message.MESSAGING_VERSION, 1);
+            msg.setHeaders(headerMap);
+            msg.setOperation(Constants.CLIENT_PING_OPERATION);
+            msg.setBody(new Object[]{});
+
+            Object response = client.invokeMethod("null", new Object[]{msg});
+            log.debug("Response: {}\n{}", response.getClass().getName(), response);
+            if (response instanceof AcknowledgeMessage || response instanceof AcknowledgeMessageExt) {
+                log.info("Got first ACK");
+                AcknowledgeMessage ack = (AcknowledgeMessage) response;
+                Object id = ack.getHeader(Message.FLEX_CLIENT_ID_HEADER);
+                if (id != null) {
+                    log.info("Got DSId: {}", id);
+                    client.setDataSourceId((String) id);
+                }
+            }
+            //wait a second for a dsid
+            do {
+                Thread.sleep(1000);
+                log.info("Done with sleeping");
+            } while (client.getDataSourceId().equals("nil"));
+            //send subscribe
+            msg = new CommandMessage();
+            msg.setCorrelationId("");
+            msg.setDestination("Red5Chat");
+            headerMap = new ObjectMap<String, Object>();
+            headerMap.put(Message.FLEX_CLIENT_ID_HEADER, client.getDataSourceId());
+            headerMap.put(Message.ENDPOINT_HEADER, "my-polling-amf");
+            msg.setHeaders(headerMap);
+            msg.setOperation(Constants.SUBSCRIBE_OPERATION);
+            msg.setBody(new Object[]{});
+
+            response = client.invokeMethod("null", new Object[]{msg});
+
+            if (response instanceof AcknowledgeMessage || response instanceof AcknowledgeMessageExt) {
+                log.info("Got second ACK {}", ((AcknowledgeMessage) response));
+            }
+
+            //poll every 5 seconds for 60
+            int loop = 12;
+            do {
+                Thread.sleep(5000);
+                log.info("Done with sleeping");
+                //send poll
+                //0 messages - returns DSK
+                //n messages - CommandMessage with internal DSA
+                msg = new CommandMessage();
+                msg.setCorrelationId("");
+                msg.setDestination("Red5Chat");
+                headerMap = new ObjectMap<String, Object>();
+                headerMap.put(Message.FLEX_CLIENT_ID_HEADER, client.getDataSourceId());
+                msg.setHeaders(headerMap);
+                msg.setOperation(Constants.POLL_OPERATION);
+                msg.setBody(new Object[]{});
+
+                response = client.invokeMethod("null", new Object[]{msg});
+                if (response instanceof AcknowledgeMessage) {
+                    AcknowledgeMessage ack = (AcknowledgeMessage) response;
+                    log.info("Got ACK response {}", ack);
+                } else if (response instanceof CommandMessage) {
+                    CommandMessage com = (CommandMessage) response;
+                    log.info("Got COM response {}", com);
+                    ArrayList list = (ArrayList) com.getBody();
+                    log.info("Child message body: {}", ((AsyncMessageExt) list.get(0)).getBody());
+                }
+            } while (--loop > 0);
+
+        } catch (Exception e) {
+            log.warn("Exception {}", e);
+        }
+    }
+
+    /**
      * Encode the method call.
      *
-     * @param method
-     *            Remote method being called
-     * @param params
-     *            Method parameters
+     * @param method Remote method being called
+     * @param params Method parameters
      * @return Byte buffer with data to perform remoting call
      */
     private IoBuffer encodeInvoke(String method, Object[] params) {
@@ -143,8 +281,7 @@ public class DSRemotingClient extends RemotingClient {
     /**
      * Process any headers sent in the response.
      *
-     * @param in
-     *            Byte buffer with response data
+     * @param in Byte buffer with response data
      */
     @SuppressWarnings("null")
     @Override
@@ -201,8 +338,7 @@ public class DSRemotingClient extends RemotingClient {
     /**
      * Decode response received from remoting server.
      *
-     * @param data
-     *            Result data to decode
+     * @param data Result data to decode
      * @return Object deserialized from byte buffer data
      */
     @SuppressWarnings("null")
@@ -262,72 +398,9 @@ public class DSRemotingClient extends RemotingClient {
     }
 
     /**
-     * Invoke a method synchronously on the remoting server.
-     *
-     * @param method
-     *            Method name
-     * @param params
-     *            Parameters passed to method
-     * @return the result of the method call
-     */
-    @SuppressWarnings("null")
-    @Override
-    public Object invokeMethod(String method, Object[] params) {
-        log.debug("invokeMethod url: {}", (url + appendToUrl));
-        IoBuffer resultBuffer = null;
-        IoBuffer data = encodeInvoke(method, params);
-        //setup POST
-        HttpPost post = null;
-        try {
-            post = new HttpPost(url + appendToUrl);
-            post.addHeader("Content-Type", CONTENT_TYPE);
-            post.setEntity(new InputStreamEntity(data.asInputStream(), data.limit()));
-            // execute the method
-            HttpResponse response = client.execute(post);
-            int code = response.getStatusLine().getStatusCode();
-            log.debug("HTTP response code: {}", code);
-            if (code / 100 != 2) {
-                throw new RuntimeException("Didn't receive success from remoting server");
-            } else {
-                HttpEntity entity = response.getEntity();
-                if (entity != null) {
-                    //fix for Trac #676
-                    int contentLength = (int) entity.getContentLength();
-                    //default the content length to 16 if post doesn't contain a good value
-                    if (contentLength < 1) {
-                        contentLength = 16;
-                    }
-                    // get the response as bytes
-                    byte[] bytes = EntityUtils.toByteArray(entity);
-                    resultBuffer = IoBuffer.wrap(bytes);
-                    resultBuffer.flip();
-                    Object result = decodeResult(resultBuffer);
-                    if (result instanceof RecordSet) {
-                        // Make sure we can retrieve paged results
-                        ((RecordSet) result).setRemotingClient(this);
-                    }
-                    return result;
-                }
-            }
-        } catch (Exception ex) {
-            log.error("Error while invoking remoting method.", ex);
-            post.abort();
-        } finally {
-            if (resultBuffer != null) {
-                resultBuffer.free();
-                resultBuffer = null;
-            }
-            data.free();
-            data = null;
-        }
-        return null;
-    }
-
-    /**
      * Used for debugging byte stream.
      *
-     * @param data
-     *            IoBuffer
+     * @param data IoBuffer
      */
     @SuppressWarnings("unused")
     private static final void dump(IoBuffer data) {
@@ -339,89 +412,4 @@ public class DSRemotingClient extends RemotingClient {
         buffer = null;
         data.position(pos);
     }
-
-    @SuppressWarnings("rawtypes")
-    public static void main(String[] args) {
-        //blazeds my-polling-amf http://localhost:8400/meta/messagebroker/amfpolling
-        DSRemotingClient client = new DSRemotingClient("http://localhost:8400/meta/messagebroker/amfpolling");
-        try {
-            //send ping
-            CommandMessage msg = new CommandMessage();
-            msg.setCorrelationId("");
-            msg.setDestination("");
-            //create / set headers
-            ObjectMap<String, Object> headerMap = new ObjectMap<String, Object>();
-            headerMap.put(Message.FLEX_CLIENT_ID_HEADER, "nil");
-            headerMap.put(Message.MESSAGING_VERSION, 1);
-            msg.setHeaders(headerMap);
-            msg.setOperation(Constants.CLIENT_PING_OPERATION);
-            msg.setBody(new Object[] {});
-
-            Object response = client.invokeMethod("null", new Object[] { msg });
-            log.debug("Response: {}\n{}", response.getClass().getName(), response);
-            if (response instanceof AcknowledgeMessage || response instanceof AcknowledgeMessageExt) {
-                log.info("Got first ACK");
-                AcknowledgeMessage ack = (AcknowledgeMessage) response;
-                Object id = ack.getHeader(Message.FLEX_CLIENT_ID_HEADER);
-                if (id != null) {
-                    log.info("Got DSId: {}", id);
-                    client.setDataSourceId((String) id);
-                }
-            }
-            //wait a second for a dsid
-            do {
-                Thread.sleep(1000);
-                log.info("Done with sleeping");
-            } while (client.getDataSourceId().equals("nil"));
-            //send subscribe
-            msg = new CommandMessage();
-            msg.setCorrelationId("");
-            msg.setDestination("Red5Chat");
-            headerMap = new ObjectMap<String, Object>();
-            headerMap.put(Message.FLEX_CLIENT_ID_HEADER, client.getDataSourceId());
-            headerMap.put(Message.ENDPOINT_HEADER, "my-polling-amf");
-            msg.setHeaders(headerMap);
-            msg.setOperation(Constants.SUBSCRIBE_OPERATION);
-            msg.setBody(new Object[] {});
-
-            response = client.invokeMethod("null", new Object[] { msg });
-
-            if (response instanceof AcknowledgeMessage || response instanceof AcknowledgeMessageExt) {
-                log.info("Got second ACK {}", ((AcknowledgeMessage) response));
-            }
-
-            //poll every 5 seconds for 60
-            int loop = 12;
-            do {
-                Thread.sleep(5000);
-                log.info("Done with sleeping");
-                //send poll
-                //0 messages - returns DSK
-                //n messages - CommandMessage with internal DSA
-                msg = new CommandMessage();
-                msg.setCorrelationId("");
-                msg.setDestination("Red5Chat");
-                headerMap = new ObjectMap<String, Object>();
-                headerMap.put(Message.FLEX_CLIENT_ID_HEADER, client.getDataSourceId());
-                msg.setHeaders(headerMap);
-                msg.setOperation(Constants.POLL_OPERATION);
-                msg.setBody(new Object[] {});
-
-                response = client.invokeMethod("null", new Object[] { msg });
-                if (response instanceof AcknowledgeMessage) {
-                    AcknowledgeMessage ack = (AcknowledgeMessage) response;
-                    log.info("Got ACK response {}", ack);
-                } else if (response instanceof CommandMessage) {
-                    CommandMessage com = (CommandMessage) response;
-                    log.info("Got COM response {}", com);
-                    ArrayList list = (ArrayList) com.getBody();
-                    log.info("Child message body: {}", ((AsyncMessageExt) list.get(0)).getBody());
-                }
-            } while (--loop > 0);
-
-        } catch (Exception e) {
-            log.warn("Exception {}", e);
-        }
-    }
-
 }
