@@ -58,6 +58,25 @@ public class AMF3OutputWriter extends org.red5.io.amf.Output {
      * */
     private ConcurrentMap<String, Integer> stringReferences;
 
+    // Minimum value for 29-bit integer encoding
+    private static final long MIN_VALUE = -268435456L;
+    // Maximum value for 29-bit integer encoding
+    private static final long MAX_VALUE = 268435455L;
+    // Maximum value for single-byte encoding
+    private static final long SINGLE_BYTE_MAX = 128L;
+    // Maximum value for double-byte encoding
+    private static final long DOUBLE_BYTE_MAX = 16384L;
+    // Maximum value for triple-byte encoding
+    private static final long TRIPLE_BYTE_MAX = 2097152L;
+    // Maximum value for quad-byte encoding
+    private static final long QUAD_BYTE_MAX = 1073741824L;
+    // Bit mask for 7 least significant bits
+    private static final long BIT_MASK_7 = 0x7F;
+    // Bit mask for 8 bits
+    private static final long BIT_MASK_8 = 0xFF;
+    // Bit mask for 29 bits
+    private static final long BIT_MASK_29 = 0x1FFFFFFF;
+
     /**
      * Constructor of AMF3 output.
      *
@@ -108,23 +127,23 @@ public class AMF3OutputWriter extends org.red5.io.amf.Output {
     }
 
     protected void putInteger(long value) {
-        if ((value >= -268435456) && (value <= 268435455)) {
-            value &= 0x1FFFFFFF;
+        if (value >= MIN_VALUE && value <= MAX_VALUE) {
+            value &= BIT_MASK_29;
         }
-        if (value < 128) {
+        if (value < SINGLE_BYTE_MAX) {
             buf.put((byte) value);
-        } else if (value < 16384) {
-            buf.put((byte) (((value >> 7) & 0x7F) | 0x80));
-            buf.put((byte) (value & 0x7F));
-        } else if (value < 2097152) {
-            buf.put((byte) (((value >> 14) & 0x7F) | 0x80));
-            buf.put((byte) (((value >> 7) & 0x7F) | 0x80));
-            buf.put((byte) (value & 0x7F));
-        } else if (value < 1073741824) {
-            buf.put((byte) (((value >> 22) & 0x7F) | 0x80));
-            buf.put((byte) (((value >> 15) & 0x7F) | 0x80));
-            buf.put((byte) (((value >> 8) & 0x7F) | 0x80));
-            buf.put((byte) (value & 0xFF));
+        } else if (value < DOUBLE_BYTE_MAX) {
+            buf.put((byte) (((value >> 7) & BIT_MASK_7) | 0x80));
+            buf.put((byte) (value & BIT_MASK_7));
+        } else if (value < TRIPLE_BYTE_MAX) {
+            buf.put((byte) (((value >> 14) & BIT_MASK_7) | 0x80));
+            buf.put((byte) (((value >> 7) & BIT_MASK_7) | 0x80));
+            buf.put((byte) (value & BIT_MASK_7));
+        } else if (value < QUAD_BYTE_MAX) {
+            buf.put((byte) (((value >> 22) & BIT_MASK_7) | 0x80));
+            buf.put((byte) (((value >> 15) & BIT_MASK_7) | 0x80));
+            buf.put((byte) (((value >> 8) & BIT_MASK_7) | 0x80));
+            buf.put((byte) (value & BIT_MASK_8));
         } else {
             log.error("Integer out of range: {}", value);
         }
