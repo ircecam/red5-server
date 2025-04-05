@@ -29,6 +29,7 @@ import org.red5.net.websocket.WSConstants;
 import org.red5.net.websocket.WebSocketConnection;
 import org.red5.net.websocket.WebSocketScope;
 import org.red5.net.websocket.WebSocketScopeManager;
+import org.red5.net.websocket.server.util.SessionConfig;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -92,16 +93,19 @@ public class WsHttpUpgradeHandler implements InternalHttpUpgradeHandler {
         this.socketWrapper = socketWrapper;
     }
 
-    public void preInit(Endpoint ep, EndpointConfig endpointConfig, DefaultWsServerContainer wsc, WsHandshakeRequest handshakeRequest, List<Extension> negotiatedExtensionsPhase2, String subProtocol, Transformation transformation, Map<String, String> pathParameters, boolean secure) {
+    public void preInit(Endpoint ep, EndpointConfig endpointConfig, DefaultWsServerContainer wsc, SessionConfig sessionConfig) {
         this.ep = ep;
         this.endpointConfig = (ServerEndpointConfig) endpointConfig;
         this.webSocketContainer = wsc;
-        this.handshakeRequest = handshakeRequest;
-        this.negotiatedExtensions = negotiatedExtensionsPhase2;
-        this.subProtocol = subProtocol;
-        this.transformation = transformation;
-        this.pathParameters = pathParameters;
-        this.secure = secure;
+
+        // Déstructuration des paramètres depuis sessionConfig
+        this.handshakeRequest = sessionConfig.getHandshakeRequest();
+        this.negotiatedExtensions = sessionConfig.getNegotiatedExtensions();
+        this.subProtocol = sessionConfig.getSubProtocol();
+        this.transformation = sessionConfig.getTransformation();
+        this.pathParameters = sessionConfig.getPathParameters();
+        this.secure = sessionConfig.isSecure();
+
         String httpSessionId = null;
         Object session = handshakeRequest.getHttpSession();
         if (session != null) {

@@ -29,6 +29,7 @@ import org.apache.tomcat.websocket.TransformationFactory;
 import org.apache.tomcat.websocket.Util;
 import org.apache.tomcat.websocket.WsHandshakeResponse;
 import org.apache.tomcat.websocket.pojo.PojoEndpointServer;
+import org.red5.net.websocket.server.util.SessionConfig;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -184,7 +185,10 @@ public class UpgradeUtil {
         }
         log.debug("About to upgrade http session: {} qs: {}", wsRequest.getHttpSession(), wsRequest.getQueryString());
         WsHttpUpgradeHandler wsHandler = req.upgrade(WsHttpUpgradeHandler.class);
-        wsHandler.preInit(ep, perSessionServerEndpointConfig, sc, wsRequest, negotiatedExtensionsPhase2, subProtocol, transformation, pathParams, req.isSecure());
+        //incruster session config
+        SessionConfig sessionConfig = new SessionConfig(wsRequest,negotiatedExtensionsPhase2,subProtocol,transformation,pathParams,req.isSecure());
+        wsHandler.preInit(ep, perSessionServerEndpointConfig, sc, sessionConfig);
+        //
         log.debug("preinit completed");
     }
 
