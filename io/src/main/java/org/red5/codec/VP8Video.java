@@ -17,195 +17,48 @@ import org.slf4j.LoggerFactory;
  * @author The Red5 Project
  * @author Paul Gregoire (mondain@gmail.com)
  */
-public class VP8Video extends AbstractVideo {
+public class VP8Video extends AbstractVideoCodec {
 
     private static Logger log = LoggerFactory.getLogger(VP8Video.class);
 
-    /**
-     * VP8 video codec constant
-     */
     static final String CODEC_NAME = "VP8";
-
     public static final byte[] VP8_KEYFRAME_PREFIX = new byte[] { 0x18, 0x01 };
-
     public static final byte[] VP8_FRAME_PREFIX = new byte[] { 0x28, 0x01 };
 
-    /**
-     * I bit from the X byte of the payload descriptor.
-     */
+    private static final byte S_BIT = (byte) 0x10;
+    private static final byte X_BIT = (byte) 0x80;
     private static final byte I_BIT = (byte) 0x80;
-
-    /**
-     * K bit from the X byte of the payload descriptor.
-     */
+    private static final byte M_BIT = (byte) 0x80;
+    private static final byte L_BIT = (byte) 0x40;
+    private static final byte T_BIT = (byte) 0x20;
     private static final byte K_BIT = (byte) 0x10;
 
-    /**
-     * L bit from the X byte of the payload descriptor.
-     */
-    private static final byte L_BIT = (byte) 0x40;
-
-    /**
-     * I bit from the I byte of the payload descriptor.
-     */
-    private static final byte M_BIT = (byte) 0x80;
-
-    /**
-     * Maximum length of a VP8 payload descriptor.
-     */
-    public static final int MAX_LENGTH = 6;
-
-    /**
-     * S bit from the first byte of the payload descriptor.
-     */
-    private static final byte S_BIT = (byte) 0x10;
-
-    /**
-     * T bit from the X byte of the payload descriptor.
-     */
-    private static final byte T_BIT = (byte) 0x20;
-
-    /**
-     * X bit from the first byte of the payload descriptor.
-     */
-    private static final byte X_BIT = (byte) 0x80;
-
-    public VP8Video() {
-    }
-
-    /** {@inheritDoc} */
     @Override
-    public String getName() {
+    protected String getCodecName() {
         return CODEC_NAME;
     }
 
-    /** {@inheritDoc} */
     @Override
-    public boolean canDropFrames() {
-        return true;
+    protected boolean isKeyFrame(byte[] data, int offset) {
+        return (data[offset] & S_BIT) == 0;
     }
 
-    /** {@inheritDoc} */
     @Override
-    public boolean canHandleData(IoBuffer data) {
-        // XXX also add support for handling non-amf VP8, maybe
-        if (data.hasRemaining()) {
-            byte first = data.get();
-            data.rewind();
-            return ((first & 0x0f) == VideoCodec.VP8.getId());
-        }
-        return false;
+    protected boolean isCorrectCodec(byte frameType) {
+        return (frameType & 0x0f) == VideoCodec.VP8.getId();
     }
 
-    /** {@inheritDoc} */
     @Override
-    public boolean addData(IoBuffer data, int timestamp) {
-        //log.trace("addData timestamp: {} remaining: {}", timestamp, data.remaining());
-        return addData(data, timestamp, true);
+    protected byte[] getKeyFramePrefix() {
+        return VP8_KEYFRAME_PREFIX;
     }
 
-    /** {@inheritDoc} */
     @Override
-    public boolean addData(IoBuffer data, int timestamp, boolean amf) {
-        log.trace("addData timestamp: {} remaining: {} amf? {}", timestamp, data.remaining(), amf);
-        if (data.hasRemaining()) {
-            // mark starting position
-            int start = data.position();
-            // are we amf?
-            if (!amf) {
-                int remaining = data.remaining();
-                // if we're not amf, figure out how to proceed based on data contents
-                if (remaining > 7) {
-                    // grab the first 8 bytes
-                    byte[] peek = new byte[8];
-                    data.get(peek);
-                    // int sz = getDesciptorSize(peek,0,peek.length);
-                    boolean isKey = isKeyFrame(peek, 0);
-                    // jump back to the starting pos
-                    data.position(start);
-                    // slice-out the existing data
-                    IoBuffer slice = data.getSlice(start, remaining);
-                    log.info("Data start: {} post-slice: {}", start, data.position());
-                    // expand the data by two to hold the amf markers
-                    data.expand(remaining + 2);
-                    // prefix the data with amf markers (two bytes)
-                    if (isKey) {
-                        // VP8 keyframe
-                        data.put(VP8_KEYFRAME_PREFIX);
-                    } else {
-                        // VP8 non-keyframe
-                        data.put(VP8_FRAME_PREFIX);
-                    }
-                    // drop the slice in behind the prefix
-                    data.put(slice);
-                    // flip it
-                    data.flip();
-                    // reset start (which technically will be the same position)
-                    start = data.position();
-                } else {
-                    log.warn("Remaining VP8 content was less than expected: {}", remaining);
-                }
-                // jump back to the starting pos
-                data.position(start);
-            }
-            // get frame type (codec + type)
-            byte frameType = data.get();
-            // get sub frame / sequence type (config, keyframe, interframe)
-            byte subFrameType = data.get();
-            if ((frameType & 0x0f) == VideoCodec.VP8.getId()) {
-                // check for keyframe (we're not storing non-keyframes here)
-                if ((frameType & 0xf0) == FLV_FRAME_KEY) {
-                    //log.trace("Key frame");
-                    if (log.isDebugEnabled()) {
-                        log.debug("Keyframe - VP8 type: {}", subFrameType);
-                    }
-                    // rewind
-                    data.rewind();
-                    switch (subFrameType) {
-                        case 1: // keyframe
-                            //log.trace("Keyframe - keyframeTimestamp: {} {}", keyframeTimestamp, timestamp);
-                            // get the time stamp and compare with the current value
-                            if (timestamp != keyframeTimestamp) {
-                                //log.trace("New keyframe");
-                                // new keyframe
-                                keyframeTimestamp = timestamp;
-                                keyframes.clear();
-                            }
-                            // store keyframe
-                            keyframes.add(new FrameData(data));
-                            break;
-                        case 0: // no decoder configuration for vp8
-                            //log.trace("Decoder configuration");
-                            break;
-                    }
-                    //log.trace("Keyframes: {}", keyframes.size());
-                }
-            } else {
-                // not VP8 data
-                log.debug("Non-VP8 data, rejecting");
-                // go back to where we started
-                data.position(start);
-                return false;
-            }
-            // go back to where we started
-            data.position(start);
-        }
-        return true;
+    protected byte[] getFramePrefix() {
+        return VP8_FRAME_PREFIX;
     }
 
-    /**
-     * The size in bytes of the payload descriptor at offset in input. The size is between 1 and 6.
-     *
-     * @param input
-     *            input
-     * @param offset
-     *            offset
-     * @param length
-     *            length
-     * @return The size in bytes of the payload descriptor at offset in input, or -1 if the input is not valid
-     */
-    @SuppressWarnings("unused")
-    private static int getDesciptorSize(byte[] input, int offset, int length) {
+    private static int getDescriptorSize(byte[] input, int offset, int length) {
         if ((input[offset] & X_BIT) == 0) {
             return 1;
         }
@@ -224,10 +77,4 @@ public class VP8Video extends AbstractVideo {
         }
         return size;
     }
-
-    private static boolean isKeyFrame(byte[] input, int offset) {
-        // if set to 0 the frame is a key frame, if set to 1 its an interframe. Defined in [RFC6386]
-        return (input[offset] & S_BIT) == 0;
-    }
-
 }
