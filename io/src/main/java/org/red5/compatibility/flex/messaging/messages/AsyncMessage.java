@@ -10,9 +10,11 @@ package org.red5.compatibility.flex.messaging.messages;
 import org.red5.io.amf3.ByteArray;
 import org.red5.io.amf3.IDataInput;
 import org.red5.io.amf3.IDataOutput;
+import org.red5.io.amf3.IExternalizable;
 import org.red5.io.utils.RandomGUID;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import java.io.Serializable;
 
 /**
  * Base class for for asynchronous Flex compatibility messages.
@@ -21,7 +23,10 @@ import org.slf4j.LoggerFactory;
  * @author Joachim Bauch (jojo@struktur.de)
  * @author Paul Gregoire (mondain@gmail.com)
  */
-public class AsyncMessage extends AbstractMessage {
+
+
+
+public class AsyncMessage extends AbstractMessage implements IExternalizable, Serializable {
 
     private static final long serialVersionUID = -3549535089417916783L;
 
@@ -30,9 +35,36 @@ public class AsyncMessage extends AbstractMessage {
     protected static byte CORRELATION_ID_BYTES_FLAG = 2;
 
     /** Id of message this message belongs to. */
-    public String correlationId;
+    private String correlationId;
 
-    protected byte[] correlationIdBytes;
+    private byte[] correlationIdBytes;
+
+    private transient AsyncMessage proxiedMessage;
+
+    static Logger log = LoggerFactory.getLogger(AsyncMessage.class);
+
+    public AsyncMessage() {
+    }
+
+    public AsyncMessage(AsyncMessage proxiedMessage) {
+        this.proxiedMessage = proxiedMessage;
+    }
+
+    public void setProxiedMessage(AsyncMessage proxiedMessage) {
+        this.proxiedMessage = proxiedMessage;
+    }
+
+    public AsyncMessage getProxiedMessage() {
+        return proxiedMessage;
+    }
+
+    public void setCorrelationId(String id) {
+        this.correlationId = id;
+    }
+
+    public String getCorrelationId() {
+        return correlationId;
+    }
 
     /** {@inheritDoc} */
     @Override
@@ -42,67 +74,77 @@ public class AsyncMessage extends AbstractMessage {
         result.append(correlationId);
     }
 
-    public void setCorrelationId(String id) {
-        correlationId = id;
-    }
-
-    public String getCorrelationId() {
-        return correlationId;
-    }
-
-    static Logger log = LoggerFactory.getLogger(AsyncMessage.class);
-
-    @Override
-    public void readExternal(IDataInput in) {
-        super.readExternal(in);
-        short[] flagsArray = readFlags(in);
-        for (int i = 0; i < flagsArray.length; ++i) {
-            short flags = flagsArray[i];
-            short reservedPosition = 0;
-            if (i == 0) {
-                if ((flags & CORRELATION_ID_FLAG) != 0) {
-                    correlationId = ((String) in.readObject());
-                }
-                if ((flags & CORRELATION_ID_BYTES_FLAG) != 0) {
-                    ByteArray ba = (ByteArray) in.readObject();
-                    correlationIdBytes = new byte[ba.length()];
-                    ba.readBytes(correlationIdBytes);
-                    correlationId = RandomGUID.fromByteArray(correlationIdBytes);
-                }
-                reservedPosition = 2;
-            }
-            if (flags >> reservedPosition == 0) {
-                continue;
-            }
-            for (short j = reservedPosition; j < 6; j = (short) (j + 1)) {
-                if ((flags >> j & 0x1) == 0) {
-                    continue;
-                }
-                in.readObject();
-            }
-        }
-    }
-
     @Override
     public void writeExternal(IDataOutput output) {
-        super.writeExternal(output);
-        if (this.correlationIdBytes == null) {
-            this.correlationIdBytes = RandomGUID.toByteArray(this.correlationId);
-        }
-        short flags = 0;
-        if ((this.correlationId != null) && (this.correlationIdBytes == null)) {
-            flags = (short) (flags | CORRELATION_ID_FLAG);
-        }
-        if (this.correlationIdBytes != null) {
-            flags = (short) (flags | CORRELATION_ID_BYTES_FLAG);
-        }
-        output.writeByte((byte) flags);
-        if ((this.correlationId != null) && (this.correlationIdBytes == null)) {
-            output.writeObject(this.correlationId);
-        }
-        if (this.correlationIdBytes != null) {
-            output.writeObject(this.correlationIdBytes);
+        try {
+            if (proxiedMessage != null) {
+                proxiedMessage.writeExternal(output);
+                return;
+            }
+
+            super.writeExternal(output);
+
+            if (this.correlationIdBytes == null) {
+                this.correlationIdBytes = RandomGUID.toByteArray(this.correlationId);
+            }
+            short flags = 0;
+            if (this.correlationId != null && this.correlationIdBytes == null) {
+                flags |= CORRELATION_ID_FLAG;
+            }
+            if (this.correlationIdBytes != null) {
+                flags |= CORRELATION_ID_BYTES_FLAG;
+            }
+
+            output.writeByte((byte) flags);
+
+            if (this.correlationId != null && this.correlationIdBytes == null) {
+                output.writeObject(this.correlationId);
+            }
+            if (this.correlationIdBytes != null) {
+                output.writeObject(this.correlationIdBytes);
+            }
+        } catch (Exception e) {
+            log.error("Erreur lors de l'écriture de l'objet AsyncMessage", e);
         }
     }
 
+    @Override
+    public void readExternal(IDataInput input) {
+        try {
+            if (proxiedMessage != null) {
+                proxiedMessage.readExternal(input);
+                return;
+            }
+            super.readExternal(input);
+            short[] flagsArray = readFlags(input);
+            for (int i = 0; i < flagsArray.length; ++i) {
+                short flags = flagsArray[i];
+                short reservedPosition = 0;
+
+                if (i == 0) {
+                    if ((flags & CORRELATION_ID_FLAG) != 0) {
+                        correlationId = (String) input.readObject();
+                    }
+                    if ((flags & CORRELATION_ID_BYTES_FLAG) != 0) {
+                        ByteArray ba = (ByteArray) input.readObject();
+                        correlationIdBytes = new byte[ba.length()];
+                        ba.readBytes(correlationIdBytes);
+                        correlationId = RandomGUID.fromByteArray(correlationIdBytes);
+                    }
+                    reservedPosition = 2;
+                }
+                if (flags >> reservedPosition == 0) {
+                    continue;
+                }
+                for (short j = reservedPosition; j < 6; j++) {
+                    if ((flags >> j & 0x1) == 0) {
+                        continue;
+                    }
+                    input.readObject();
+                }
+            }
+        } catch (Exception e) {
+            log.error("Erreur lors de la lecture de l'objet AsyncMessage", e);
+        }
+    }
 }
