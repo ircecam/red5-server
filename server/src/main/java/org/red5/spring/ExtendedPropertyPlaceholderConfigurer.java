@@ -33,19 +33,16 @@ import org.springframework.core.io.support.PathMatchingResourcePatternResolver;
  * @author Michael Guymon (michael.guymon@gmail.com)
  *
  */
-@SuppressWarnings("deprecation")
+
 public class ExtendedPropertyPlaceholderConfigurer extends PropertyPlaceholderConfigurer {
 
-    private static Logger logger = LoggerFactory.getLogger(ExtendedPropertyPlaceholderConfigurer.class);
+    private final Logger logger = LoggerFactory.getLogger(ExtendedPropertyPlaceholderConfigurer.class);
 
-    private static Properties globalPlaceholderProperties = new Properties();
-
+    private final Properties globalPlaceholderProperties = new Properties();
     private Properties mergedProperties;
 
-    @SuppressWarnings("null")
     @Override
     protected void processProperties(ConfigurableListableBeanFactory beanFactoryToProcess, Properties props) throws BeansException {
-
         props.putAll(copyOfGlobalProperties());
         logger.debug("Placeholder props: {}", props.toString());
 
@@ -55,7 +52,7 @@ public class ExtendedPropertyPlaceholderConfigurer extends PropertyPlaceholderCo
     }
 
     /**
-     * Merged {@link Properties} created by {@link #processProperties}
+     * Merged {@link Properties} created by {@link #processProperties}.
      *
      * @return {@link Properties}
      */
@@ -64,17 +61,15 @@ public class ExtendedPropertyPlaceholderConfigurer extends PropertyPlaceholderCo
     }
 
     /**
-     * String[] of wildcard locations of properties that are converted to Resource[] using using {@link PathMatchingResourcePatternResolver}
+     * String[] of wildcard locations of properties that are converted to Resource[] using {@link PathMatchingResourcePatternResolver}.
      *
-     * @param locations
-     *            String[]
-     * @throws IOException
-     *             on IO exception
+     * @param locations String[]
+     * @throws IOException on IO exception
      */
     @SuppressWarnings("null")
     public void setWildcardLocations(String[] locations) throws IOException {
 
-        List<Resource> resources = new ArrayList<Resource>();
+        List<Resource> resources = new ArrayList<>();
         PathMatchingResourcePatternResolver resolver = new PathMatchingResourcePatternResolver(this.getClass().getClassLoader());
 
         for (String location : locations) {
@@ -83,17 +78,16 @@ public class ExtendedPropertyPlaceholderConfigurer extends PropertyPlaceholderCo
                 // Get all Resources for a wildcard location
                 Resource[] configs = resolver.getResources(location);
                 if (configs != null && configs.length > 0) {
-                    List<Resource> resourceGroup = new ArrayList<Resource>();
+                    List<Resource> resourceGroup = new ArrayList<>();
                     for (Resource resource : configs) {
                         logger.debug("Loading {} for location {}", resource.getFilename(), location);
                         resourceGroup.add(resource);
                     }
                     // Sort all Resources for a wildcard location by filename
-                    Collections.sort(resourceGroup, new ResourceFilenameComparator());
+                    resourceGroup.sort(this::compareResourceFilenames);
 
                     // Add to master List
                     resources.addAll(resourceGroup);
-
                 } else {
                     logger.info("Wildcard location does not exist: {}", location);
                 }
@@ -101,54 +95,44 @@ public class ExtendedPropertyPlaceholderConfigurer extends PropertyPlaceholderCo
                 logger.error("Failed to resolve location: {} - {}", location, ioException);
             }
         }
-        this.setLocations(resources.toArray(new Resource[resources.size()]));
+        this.setLocations(resources.toArray(new Resource[0]));
     }
 
     /**
-     * Add a global property to be merged
+     * Add a global property to be merged.
      *
-     * @param key
-     *            String
-     * @param val
-     *            String
+     * @param key String
+     * @param val String
      */
-    public static synchronized void addGlobalProperty(String key, String val) {
+    public synchronized void addGlobalProperty(String key, String val) {
         globalPlaceholderProperties.setProperty(key, val);
     }
 
     /**
-     * Copy of the manual properties
+     * Copy of the manual properties.
      *
      * @return {@link Properties}
      */
-    private static synchronized Properties copyOfGlobalProperties() {
-        // return new Properties( runtimeProperties ); returns an empty prop ??
-
+    private synchronized Properties copyOfGlobalProperties() {
         Properties prop = new Properties();
         prop.putAll(globalPlaceholderProperties);
-
         return prop;
     }
 
-    public static class ResourceFilenameComparator implements Comparator<Resource>, Serializable {
-
-        private static final long serialVersionUID = -6365943736917478749L;
-
-        @SuppressWarnings("null")
-        public int compare(Resource resource1, Resource resource2) {
-            if (resource1 != null) {
-                if (resource2 != null) {
-                    return resource1.getFilename().compareTo(resource2.getFilename());
-                } else {
-                    return 1;
-                }
-            } else if (resource2 == null) {
-                return 0;
+    /**
+     * Compare two resources by their filenames.
+     */
+    private int compareResourceFilenames(Resource resource1, Resource resource2) {
+        if (resource1 != null) {
+            if (resource2 != null) {
+                return resource1.getFilename().compareTo(resource2.getFilename());
             } else {
-                return -1;
+                return 1;
             }
+        } else if (resource2 == null) {
+            return 0;
+        } else {
+            return -1;
         }
-
     }
-
 }
